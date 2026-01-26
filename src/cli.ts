@@ -8,15 +8,19 @@ import { ingestCommand } from "./commands/ingest.ts";
 import { mcpCommand } from "./commands/mcp.ts";
 
 const USAGE = `
-Applesauce Examples MCP Server
+Applesauce MCP Server
 
 USAGE:
-  deno task ingest    - Ingest example files from configured directory
-  deno task mcp       - Start the MCP server
+  deno task ingest        - Ingest both examples and documentation
+  deno task mcp           - Start the MCP server
 
 COMMANDS:
-  ingest              Index all example files and generate embeddings
-  mcp                 Run the MCP server for AI agent integration
+  ingest [OPTIONS]        Index example files and/or documentation
+    --examples-only       Only ingest example files
+    --docs-only           Only ingest documentation
+    --category=NAME       Filter docs by category (e.g., core, loading)
+
+  mcp                     Run the MCP server for AI agent integration
 
 REQUIREMENTS:
   - Ollama must be running (http://localhost:11434)
@@ -24,8 +28,17 @@ REQUIREMENTS:
   - config.json file with "examplesFolder" field
 
 EXAMPLES:
-  # First time setup - ingest all examples
+  # Ingest everything (examples + docs)
   deno task ingest
+
+  # Ingest only examples
+  deno run --allow-read --allow-write --allow-net --allow-env --allow-sys --allow-ffi src/cli.ts ingest --examples-only
+
+  # Ingest only documentation
+  deno run --allow-read --allow-write --allow-net --allow-env --allow-sys --allow-ffi src/cli.ts ingest --docs-only
+
+  # Ingest only core documentation
+  deno run --allow-read --allow-write --allow-net --allow-env --allow-sys --allow-ffi src/cli.ts ingest --docs-only --category=core
 
   # Start the MCP server
   deno task mcp
@@ -45,9 +58,23 @@ async function main() {
 
   try {
     switch (command) {
-      case "ingest":
-        await ingestCommand();
+      case "ingest": {
+        // Parse options
+        const examplesOnly = args.includes("--examples-only");
+        const docsOnly = args.includes("--docs-only");
+        const categoryArg = args.find((arg) => arg.startsWith("--category="));
+        const category = categoryArg?.split("=")[1];
+
+        // Determine what to ingest
+        const options = {
+          examples: examplesOnly ? true : !docsOnly,
+          docs: docsOnly ? true : !examplesOnly,
+          category,
+        };
+
+        await ingestCommand(options);
         break;
+      }
 
       case "mcp":
         await mcpCommand();

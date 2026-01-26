@@ -2,13 +2,13 @@ import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import {
   CallToolRequestSchema,
-  ListToolsRequestSchema,
   ListResourcesRequestSchema,
+  ListToolsRequestSchema,
   ReadResourceRequestSchema,
-  type Tool,
   type Resource,
+  type Tool,
 } from "@modelcontextprotocol/sdk/types.js";
-import { type SearchParams } from "../types.ts";
+import { type DocSearchParams, type SearchParams } from "../types.ts";
 import {
   getExampleByName,
   getExampleCount,
@@ -16,6 +16,13 @@ import {
   listAllExamples,
   searchExamples,
 } from "../lib/database.ts";
+import {
+  getDocsStats,
+  initDocsDatabase,
+  listDocs,
+  searchDocs,
+  setHybridSearchConfig,
+} from "../lib/database-docs.ts";
 import { generateEmbedding } from "../lib/embeddings.ts";
 
 /**
@@ -66,6 +73,58 @@ const TOOLS: Tool[] = [
         },
       },
       required: ["name"],
+    },
+  },
+  {
+    name: "search_docs",
+    description:
+      "Search Applesauce documentation using hybrid search (semantic + keyword matching). Returns relevant documentation chunks with context.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        query: {
+          type: "string",
+          description:
+            "Search query for documentation (e.g., 'How do I use EventStore?', 'RelayPool connection')",
+        },
+        limit: {
+          type: "number",
+          default: 10,
+          description:
+            "Maximum number of results to return (1-20, default: 10)",
+        },
+        category: {
+          type: "string",
+          description:
+            "Optional filter by documentation category (e.g., 'core', 'loading', 'creating', 'storage')",
+        },
+      },
+      required: ["query"],
+    },
+  },
+  {
+    name: "list_doc_categories",
+    description:
+      "List all documentation categories with chunk counts. Useful for discovering what documentation is available.",
+    inputSchema: {
+      type: "object",
+      properties: {},
+    },
+  },
+  {
+    name: "read_docs",
+    description:
+      "Read the full content of a documentation file. Use this after search_docs to get the complete documentation.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        filePath: {
+          type: "string",
+          description:
+            "File path from search results (e.g., 'core/event-store.md', 'loading/relays/pool.md')",
+        },
+      },
+      required: ["filePath"],
     },
   },
 ];
@@ -161,11 +220,153 @@ async function handleGetExample(args: unknown) {
 }
 
 /**
+ * Handle search_docs tool
+ */
+async function handleSearchDocs(args: unknown) {
+  const params = args as DocSearchParams;
+
+  if (!params.query || typeof params.query !== "string") {
+    throw new Error("Missing required parameter: query");
+  }
+
+  // Generate embedding for the query
+  const queryVector = await generateEmbedding(params.query);
+
+  // Search documentation
+  const results = await searchDocs(params, queryVector);
+
+  // Format results with score and text snippet
+  const formattedResults = results.map((chunk, idx) => {
+    // Get score from the chunk (stored temporarily during search)
+    const score = (chunk as unknown as { _distance?: number })._distance ?? 0;
+
+    // Create a preview snippet (first 200 chars)
+    const snippet = chunk.text.length > 200
+      ? chunk.text.substring(0, 200) + "..."
+      : chunk.text;
+
+    return {
+      rank: idx + 1,
+      filePath: chunk.filePath,
+      category: chunk.metadata.category,
+      score: parseFloat(score.toFixed(4)), // Relevance score (lower is better)
+      snippet,
+      textLength: chunk.text.length,
+    };
+  });
+
+  return {
+    content: [
+      {
+        type: "text",
+        text: JSON.stringify(formattedResults, null, 2),
+      },
+    ],
+  };
+}
+
+/**
+ * Handle list_doc_categories tool
+ */
+async function handleListDocCategories() {
+  const stats = await getDocsStats();
+
+  const categories = Object.entries(stats.categories).map(([name, count]) => ({
+    category: name,
+    chunkCount: count,
+  }));
+
+  return {
+    content: [
+      {
+        type: "text",
+        text: JSON.stringify(
+          {
+            totalDocs: stats.docCount,
+            totalChunks: stats.chunkCount,
+            categories,
+          },
+          null,
+          2,
+        ),
+      },
+    ],
+  };
+}
+
+/**
+ * Handle read_docs tool
+ */
+async function handleReadDocs(args: unknown) {
+  const { filePath } = args as { filePath: string };
+
+  if (!filePath || typeof filePath !== "string") {
+    throw new Error("Missing required parameter: filePath");
+  }
+
+  // Validate and read the file
+  const DOCS_ROOT = "./reference/applesauce/apps/docs";
+  const fullPath = `${DOCS_ROOT}/${filePath}`;
+
+  try {
+    // Security check: ensure path is within docs directory
+    const { resolve } = await import("@std/path");
+    const absolutePath = resolve(fullPath);
+    const absoluteDocsRoot = resolve(DOCS_ROOT);
+
+    if (!absolutePath.startsWith(absoluteDocsRoot)) {
+      throw new Error(
+        "Invalid file path: must be within documentation directory",
+      );
+    }
+
+    // Read the file
+    const content = await Deno.readTextFile(absolutePath);
+
+    // Strip front-matter for cleaner output
+    let textContent = content;
+    const frontMatterRegex = /^---\n[\s\S]*?\n---\n/;
+    if (frontMatterRegex.test(content)) {
+      textContent = content.replace(frontMatterRegex, "");
+    }
+
+    return {
+      content: [
+        {
+          type: "text",
+          text: textContent,
+        },
+      ],
+    };
+  } catch (error) {
+    if (error instanceof Deno.errors.NotFound) {
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify(
+              { error: "Documentation file not found", filePath },
+              null,
+              2,
+            ),
+          },
+        ],
+      };
+    }
+    throw error;
+  }
+}
+
+/**
  * Start the MCP server
  */
 export async function mcpCommand(): Promise<void> {
-  // Initialize database
+  // Initialize databases
   await initDatabase();
+  await initDocsDatabase();
+
+  // Configure hybrid search (weight: 0.6, candidateMultiplier: 2)
+  setHybridSearchConfig(0.6, 2);
 
   // Create MCP server
   const server = new Server(
@@ -191,20 +392,29 @@ export async function mcpCommand(): Promise<void> {
     async (request: { params: { name: string; arguments?: unknown } }) => {
       const { name, arguments: args } = request.params;
 
-    try {
-      switch (name) {
-        case "search_examples":
-          return await handleSearchExamples(args);
+      try {
+        switch (name) {
+          case "search_examples":
+            return await handleSearchExamples(args);
 
-        case "list_examples":
-          return await handleListExamples();
+          case "list_examples":
+            return await handleListExamples();
 
-        case "get_example":
-          return await handleGetExample(args);
+          case "get_example":
+            return await handleGetExample(args);
 
-        default:
-          throw new Error(`Unknown tool: ${name}`);
-      }
+          case "search_docs":
+            return await handleSearchDocs(args);
+
+          case "list_doc_categories":
+            return await handleListDocCategories();
+
+          case "read_docs":
+            return await handleReadDocs(args);
+
+          default:
+            throw new Error(`Unknown tool: ${name}`);
+        }
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         return {

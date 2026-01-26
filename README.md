@@ -59,7 +59,9 @@ The MCP server exposes three tools:
 
 ### 1. search_examples
 
-Search for examples using natural language or keywords. Returns only basic information (name, description, category) to help you identify relevant examples. Use `get_example` to retrieve the full code.
+Search for examples using natural language or keywords. Returns only basic
+information (name, description, category) to help you identify relevant
+examples. Use `get_example` to retrieve the full code.
 
 **Parameters:**
 
@@ -95,7 +97,8 @@ List all available examples with their names and descriptions.
 
 ### 3. get_example
 
-Retrieve the full code and details for a specific example by name. Use this after `search_examples` to get the actual code.
+Retrieve the full code and details for a specific example by name. Use this
+after `search_examples` to get the actual code.
 
 **Parameters:**
 

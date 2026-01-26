@@ -40,6 +40,16 @@ export async function createDefaultConfig(
 ): Promise<void> {
   const defaultConfig: Config = {
     examplesFolder: "./examples",
+    chunker: {
+      hardThreshold: 0.6,
+      initConst: 1.5,
+      c: 0.9,
+      minChunkLength: 50,
+    },
+    hybridSearch: {
+      weight: 0.6,
+      candidateMultiplier: 2,
+    },
   };
 
   await Deno.writeTextFile(configPath, JSON.stringify(defaultConfig, null, 2));

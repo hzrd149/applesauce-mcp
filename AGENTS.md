@@ -1,10 +1,14 @@
 # Agent Development Guide
 
-This document provides coding agents with essential information about the codebase structure, development commands, and style guidelines.
+This document provides coding agents with essential information about the
+codebase structure, development commands, and style guidelines.
 
 ## Project Overview
 
-**Applesauce MCP** is a Deno-based Model Context Protocol (MCP) server that provides semantic search over code examples using LanceDB and Ollama embeddings. The project includes a reference monorepo as a git submodule (`reference/applesauce/`).
+**Applesauce MCP** is a Deno-based Model Context Protocol (MCP) server that
+provides semantic search over code examples using LanceDB and Ollama embeddings.
+The project includes a reference monorepo as a git submodule
+(`reference/applesauce/`).
 
 ### Project Structure
 
@@ -60,15 +64,20 @@ deno lint --fix            # Auto-fix linting issues
 
 - **File naming**: Use kebab-case (e.g., `database.ts`, `embeddings.ts`)
 - **Function naming**: camelCase with descriptive names
-- **Type naming**: PascalCase for interfaces/types (e.g., `ExampleRecord`, `SearchParams`)
-- **Constants**: SCREAMING_SNAKE_CASE (e.g., `DB_PATH`, `TABLE_NAME`, `EMBEDDING_MODEL`)
-- **Directory structure**: Feature-based organization (commands/, lib/, types.ts at root)
+- **Type naming**: PascalCase for interfaces/types (e.g., `ExampleRecord`,
+  `SearchParams`)
+- **Constants**: SCREAMING_SNAKE_CASE (e.g., `DB_PATH`, `TABLE_NAME`,
+  `EMBEDDING_MODEL`)
+- **Directory structure**: Feature-based organization (commands/, lib/, types.ts
+  at root)
 
 ### Imports
 
 **Main Project (Deno)**:
+
 - Always use `.ts` file extensions in relative imports
-- Import from Deno standard library via JSR: `@std/path`, `@std/fs`, `@std/crypto`
+- Import from Deno standard library via JSR: `@std/path`, `@std/fs`,
+  `@std/crypto`
 - Use named imports (no default exports)
 - Group imports: standard library → external packages → relative imports
 
@@ -86,6 +95,7 @@ import { initDatabase } from "./lib/database.ts";
 ```
 
 **Reference Monorepo (Node.js)**:
+
 - Use `.js` file extensions in imports (TypeScript NodeNext module resolution)
 - Leverage barrel exports via `index.ts` files
 - Use type-only imports when appropriate: `import { type Foo } from "./bar.js"`
@@ -105,7 +115,8 @@ import { BehaviorSubject, Observable } from "rxjs";
 - **Explicit types**: Prefer explicit return types on functions
 - **Type-only imports**: Use `import { type Foo }` when importing only types
 - **No `any`**: Avoid `any` types; use `unknown` if type is truly unknown
-- **Interfaces vs Types**: Use `interface` for object shapes, `type` for unions/utilities
+- **Interfaces vs Types**: Use `interface` for object shapes, `type` for
+  unions/utilities
 
 ```typescript
 /** JSDoc comment describing the function */
@@ -127,7 +138,10 @@ try {
 } catch (error) {
   const message = error instanceof Error ? error.message : String(error);
   return {
-    content: [{ type: "text", text: JSON.stringify({ error: message }, null, 2) }],
+    content: [{
+      type: "text",
+      text: JSON.stringify({ error: message }, null, 2),
+    }],
     isError: true,
   };
 }
@@ -158,7 +172,9 @@ export async function searchExamples(
 
 ## CLI Usage and Cliffy
 
-This project uses [Cliffy](https://cliffy.dev/) for building the CLI. When extending commands:
+This project uses [Cliffy](https://cliffy.dev/) for building the CLI. When
+extending commands:
+
 - Use Cliffy's command parsing for robust argument handling
 - Provide clear help text and examples
 - Validate inputs early with helpful error messages
@@ -166,6 +182,7 @@ This project uses [Cliffy](https://cliffy.dev/) for building the CLI. When exten
 ## Dependencies
 
 **Main Project**:
+
 - Deno standard library (`@std/*`)
 - Cliffy CLI framework (`@cliffy/*`)
 - MCP SDK (`@modelcontextprotocol/sdk`)

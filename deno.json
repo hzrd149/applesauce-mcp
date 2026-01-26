@@ -1,7 +1,7 @@
 {
   "tasks": {
     "dev": "npx @modelcontextprotocol/inspector deno task mcp",
-    "ingest": "deno run --allow-read --allow-write --allow-net --allow-sys --allow-ffi --allow-env --watch src/cli.ts ingest",
+    "ingest": "deno run --allow-read --allow-write --allow-net --allow-sys --allow-ffi --allow-env src/cli.ts ingest",
     "mcp": "deno run --allow-read --allow-write --allow-net --allow-env --allow-sys --allow-ffi --watch src/cli.ts mcp",
     "check": "deno check src/cli.ts",
     "submodule:init": "git submodule update --init --recursive",
@@ -25,5 +25,13 @@
   "compilerOptions": {
     "lib": ["deno.ns", "deno.unstable", "dom"],
     "strict": true
+  },
+  "exclude": [
+    "reference/"
+  ],
+  "fmt": {
+    "exclude": [
+      "reference/"
+    ]
   }
 }
