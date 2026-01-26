@@ -3,7 +3,10 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
+  ListResourcesRequestSchema,
+  ReadResourceRequestSchema,
   type Tool,
+  type Resource,
 } from "@modelcontextprotocol/sdk/types.js";
 import { type SearchParams } from "../types.ts";
 import {
@@ -173,6 +176,7 @@ export async function mcpCommand(): Promise<void> {
     {
       capabilities: {
         tools: {},
+        resources: {},
       },
     },
   );
@@ -182,8 +186,10 @@ export async function mcpCommand(): Promise<void> {
     tools: TOOLS,
   }));
 
-  server.setRequestHandler(CallToolRequestSchema, async (request) => {
-    const { name, arguments: args } = request.params;
+  server.setRequestHandler(
+    CallToolRequestSchema,
+    async (request: { params: { name: string; arguments?: unknown } }) => {
+      const { name, arguments: args } = request.params;
 
     try {
       switch (name) {
@@ -199,19 +205,64 @@ export async function mcpCommand(): Promise<void> {
         default:
           throw new Error(`Unknown tool: ${name}`);
       }
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify({ error: message }, null, 2),
+            },
+          ],
+          isError: true,
+        };
+      }
+    },
+  );
+
+  // Register resource handlers
+  server.setRequestHandler(ListResourcesRequestSchema, async () => {
+    const allExamples = await listAllExamples();
+
+    const resources: Resource[] = allExamples.map((example) => ({
+      uri: `applesauce://example/${example.name}`,
+      name: example.name,
+      description: example.description || `Example: ${example.name}`,
+      mimeType: "text/typescript",
+    }));
+
+    return { resources };
+  });
+
+  server.setRequestHandler(
+    ReadResourceRequestSchema,
+    async (request: { params: { uri: string } }) => {
+      const { uri } = request.params;
+
+      // Extract example name from URI (applesauce://example/casting/thread)
+      const prefix = "applesauce://example/";
+      if (!uri.startsWith(prefix)) {
+        throw new Error(`Invalid resource URI: ${uri}`);
+      }
+
+      const exampleName = uri.slice(prefix.length);
+      const example = await getExampleByName(exampleName);
+
+      if (!example) {
+        throw new Error(`Example not found: ${exampleName}`);
+      }
+
       return {
-        content: [
+        contents: [
           {
-            type: "text",
-            text: JSON.stringify({ error: message }, null, 2),
+            uri,
+            mimeType: "text/typescript",
+            text: example.code,
           },
         ],
-        isError: true,
       };
-    }
-  });
+    },
+  );
 
   // Start server with stdio transport
   const transport = new StdioServerTransport();

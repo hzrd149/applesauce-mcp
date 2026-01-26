@@ -22,4 +22,4 @@ node_modules/
 *~
 
 # Ingest references
-reference/applesauce/
+# reference/applesauce/ - now a git submodule
