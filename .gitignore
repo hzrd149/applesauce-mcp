@@ -1,0 +1,25 @@
+# Deno
+deno.lock
+.deno/
+
+# Data directory (LanceDB)
+data/
+
+# Config file (may contain sensitive paths)
+config.json
+
+# Node modules (if any)
+node_modules/
+
+# MacOS
+.DS_Store
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Ingest references
+reference/applesauce/
