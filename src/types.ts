@@ -89,7 +89,6 @@ export interface ChunkerConfig {
 export interface DocSearchParams {
   query: string;
   limit?: number; // Default: 10
-  category?: string; // Optional filter
 }
 
 /**

@@ -314,15 +314,9 @@ export async function searchDocs(
   try {
     // Step 1: Semantic (vector) search
     const candidateLimit = limit * candidateMultiplier;
-    let query = tbl.vectorSearch(queryVector).distanceType("dot").limit(
+    const query = tbl.vectorSearch(queryVector).distanceType("dot").limit(
       candidateLimit,
     );
-
-    // Apply category filter if specified
-    if (params.category) {
-      const escapedCategory = params.category.replace(/'/g, "''");
-      query = query.where(`metadata.category = '${escapedCategory}'`);
-    }
 
     const vectorResults = await query.toArray();
     let results = vectorResults as unknown as DocChunk[];

@@ -78,7 +78,7 @@ const TOOLS: Tool[] = [
   {
     name: "search_docs",
     description:
-      "Search Applesauce documentation using hybrid search (semantic + keyword matching). Returns relevant documentation chunks with context.",
+      "Search Applesauce documentation using hybrid search (semantic + keyword matching). Returns formatted markdown with relevant documentation chunks and context.",
     inputSchema: {
       type: "object",
       properties: {
@@ -92,11 +92,6 @@ const TOOLS: Tool[] = [
           default: 10,
           description:
             "Maximum number of results to return (1-20, default: 10)",
-        },
-        category: {
-          type: "string",
-          description:
-            "Optional filter by documentation category (e.g., 'core', 'loading', 'creating', 'storage')",
         },
       },
       required: ["query"],
@@ -235,31 +230,56 @@ async function handleSearchDocs(args: unknown) {
   // Search documentation
   const results = await searchDocs(params, queryVector);
 
-  // Format results with score and text snippet
-  const formattedResults = results.map((chunk, idx) => {
-    // Get score from the chunk (stored temporarily during search)
+  // Format results as human/AI-friendly markdown
+  const lines: string[] = [];
+  lines.push(`# Documentation Search Results`);
+  lines.push("");
+  lines.push(`**Query:** ${params.query}`);
+  lines.push(
+    `**Results:** ${results.length} chunk${
+      results.length !== 1 ? "s" : ""
+    } found`,
+  );
+  lines.push("");
+  lines.push("---");
+  lines.push("");
+
+  for (let i = 0; i < results.length; i++) {
+    const chunk = results[i];
     const score = (chunk as unknown as { _distance?: number })._distance ?? 0;
+    const rank = i + 1;
 
-    // Create a preview snippet (first 200 chars)
-    const snippet = chunk.text.length > 200
-      ? chunk.text.substring(0, 200) + "..."
-      : chunk.text;
+    lines.push(`## Result ${rank}`);
+    lines.push("");
+    lines.push(`**File:** \`${chunk.filePath}\``);
+    lines.push(`**Category:** ${chunk.metadata.category}`);
+    lines.push(`**Relevance Score:** ${score.toFixed(4)} (lower is better)`);
 
-    return {
-      rank: idx + 1,
-      filePath: chunk.filePath,
-      category: chunk.metadata.category,
-      score: parseFloat(score.toFixed(4)), // Relevance score (lower is better)
-      snippet,
-      textLength: chunk.text.length,
-    };
-  });
+    // Include headers if available
+    if (
+      Array.isArray(chunk.metadata.headers) &&
+      chunk.metadata.headers.length > 0
+    ) {
+      lines.push(`**Section:** ${chunk.metadata.headers.join(" > ")}`);
+    }
+
+    lines.push("");
+    lines.push("**Content:**");
+    lines.push("");
+    lines.push("```");
+    // Include the full chunk text for better context
+    lines.push(chunk.text);
+    lines.push("```");
+    lines.push("");
+    lines.push("---");
+    lines.push("");
+  }
 
   return {
     content: [
       {
         type: "text",
-        text: JSON.stringify(formattedResults, null, 2),
+        text: lines.join("\n"),
       },
     ],
   };
