@@ -15,11 +15,13 @@ The project includes a reference monorepo as a git submodule
 ```
 applesauce-mcp/              # Main Deno project
 ├── src/
-│   ├── cli.ts               # CLI entry point
+│   ├── cli.ts               # CLI entry point (MCP server)
 │   ├── types.ts             # Type definitions
 │   ├── config.ts            # Configuration loader
-│   ├── commands/            # Command implementations
-│   └── lib/                 # Core libraries (database, embeddings, metadata)
+│   ├── commands/            # Command implementations (mcp)
+│   └── lib/                 # Core libraries (database, embeddings, metadata, http-transport)
+├── scripts/
+│   └── ingest.ts            # Ingest script (examples + docs)
 ├── data/lancedb/            # Database storage (gitignored)
 ├── reference/applesauce/    # Git submodule: Node.js/pnpm monorepo
 └── deno.json                # Deno configuration
@@ -36,9 +38,10 @@ reference/applesauce/        # Reference monorepo (submodule)
 
 ```bash
 # Development and running
-deno task dev              # Run MCP server with inspector
-deno task ingest           # Ingest example files (with --watch)
-deno task mcp              # Start MCP server (with --watch)
+deno task dev              # Run MCP server with MCP Inspector
+deno task start            # Start MCP server in stdio mode (with --watch)
+deno task start:http       # Start MCP server in HTTP/SSE mode (with --watch)
+deno task ingest           # Ingest example files and documentation
 deno task check            # Type checking
 
 # Git submodule management

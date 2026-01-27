@@ -5,6 +5,7 @@
 import * as lancedb from "@lancedb/lancedb";
 import { Index } from "@lancedb/lancedb";
 import type { DocChunk, DocSearchParams, DocSearchResult } from "../types.ts";
+import * as logger from "./logger.ts";
 
 const DB_PATH = "./data/lancedb";
 const TABLE_NAME = "docs";
@@ -42,12 +43,12 @@ export async function initDocsDatabase(): Promise<void> {
 
   if (tableNames.includes(TABLE_NAME)) {
     table = await db.openTable(TABLE_NAME);
-    console.error(`✓ Opened docs table: ${TABLE_NAME}`);
+    logger.error(`✓ Opened docs table: ${TABLE_NAME}`);
 
     // Ensure FTS index exists
     await ensureFtsIndex();
   } else {
-    console.error(`ℹ Table "${TABLE_NAME}" will be created on first ingestion`);
+    logger.error(`ℹ Table "${TABLE_NAME}" will be created on first ingestion`);
   }
 }
 
@@ -66,7 +67,7 @@ async function ensureFtsIndex(): Promise<void> {
 
     if (hasExpectedIndex) {
       ftsEnabled = true;
-      console.error(`✓ FTS index exists: ${FTS_INDEX_NAME}`);
+      logger.error(`✓ FTS index exists: ${FTS_INDEX_NAME}`);
       return;
     }
 
@@ -79,17 +80,17 @@ async function ensureFtsIndex(): Promise<void> {
       name: FTS_INDEX_NAME,
     });
     ftsEnabled = true;
-    console.error(`✓ Created FTS index: ${FTS_INDEX_NAME}`);
+    logger.error(`✓ Created FTS index: ${FTS_INDEX_NAME}`);
 
     // Drop old FTS indices
     for (const idx of existingFtsIndices) {
       if (idx.name !== FTS_INDEX_NAME) {
         await table.dropIndex(idx.name);
-        console.error(`✓ Dropped old FTS index: ${idx.name}`);
+        logger.error(`✓ Dropped old FTS index: ${idx.name}`);
       }
     }
   } catch (error) {
-    console.error(`⚠ Failed to create FTS index:`, error);
+    logger.error(`⚠ Failed to create FTS index:`, error);
     ftsEnabled = false;
   }
 }
@@ -104,7 +105,7 @@ async function rebuildFtsIndex(): Promise<void> {
     const cleanupThreshold = new Date(Date.now() - 60 * 1000); // 1 minute
     await table.optimize({ cleanupOlderThan: cleanupThreshold });
   } catch (error) {
-    console.error(`⚠ Failed to rebuild FTS index:`, error);
+    logger.error(`⚠ Failed to rebuild FTS index:`, error);
   }
 }
 
@@ -130,14 +131,14 @@ async function getTable(): Promise<lancedb.Table> {
  */
 export async function deleteDocChunks(filePath: string): Promise<void> {
   if (!table) {
-    console.error("⚠ Skipping deletion as table does not exist");
+    logger.error("⚠ Skipping deletion as table does not exist");
     return;
   }
 
   try {
     const escapedFilePath = filePath.replace(/'/g, "''");
     await table.delete(`\`filePath\` = '${escapedFilePath}'`);
-    console.error(`✓ Deleted chunks for: ${filePath}`);
+    logger.error(`✓ Deleted chunks for: ${filePath}`);
 
     await rebuildFtsIndex();
   } catch (error) {
@@ -173,7 +174,7 @@ export async function insertDocChunks(chunks: DocChunk[]): Promise<void> {
         chunk as unknown as Record<string, unknown>
       );
       table = await db.createTable(TABLE_NAME, records);
-      console.error(`✓ Created docs table: ${TABLE_NAME}`);
+      logger.error(`✓ Created docs table: ${TABLE_NAME}`);
 
       // Create FTS index
       await ensureFtsIndex();
@@ -188,7 +189,7 @@ export async function insertDocChunks(chunks: DocChunk[]): Promise<void> {
       await rebuildFtsIndex();
     }
 
-    console.error(`✓ Inserted ${chunks.length} chunks`);
+    logger.error(`✓ Inserted ${chunks.length} chunks`);
   } catch (error) {
     throw new Error(`Failed to insert chunks: ${error}`);
   }
@@ -348,7 +349,7 @@ export async function searchDocs(
           hybridWeight,
         );
       } catch (ftsError) {
-        console.error("⚠ FTS search failed, using vector-only:", ftsError);
+        logger.error("⚠ FTS search failed, using vector-only:", ftsError);
       }
     }
 

@@ -4,6 +4,7 @@
 
 import * as lancedb from "@lancedb/lancedb";
 import { type ExampleRecord, type SearchParams } from "../types.ts";
+import * as logger from "./logger.ts";
 
 const DB_PATH = "./data/lancedb";
 const TABLE_NAME = "examples";
@@ -57,13 +58,13 @@ export async function upsertExample(example: ExampleRecord): Promise<void> {
       table = await db.createTable(TABLE_NAME, [
         example as unknown as Record<string, unknown>,
       ]);
-      console.log(`✓ Created table: ${TABLE_NAME}`);
+      logger.log(`✓ Created table: ${TABLE_NAME}`);
     } else {
       // Add the record
       await table.add([example as unknown as Record<string, unknown>]);
     }
   } catch (error) {
-    console.error(`Failed to upsert example ${example.id}:`, error);
+    logger.error(`Failed to upsert example ${example.id}:`, error);
     throw error;
   }
 }

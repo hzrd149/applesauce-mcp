@@ -1,18 +1,19 @@
 # Applesauce Examples MCP Server
 
-A Deno CLI tool that indexes example files into a LanceDB vector database and
-serves them via an MCP (Model Context Protocol) server for AI agent integration.
+An MCP (Model Context Protocol) server that provides semantic search over code
+examples and documentation using LanceDB vector database and Ollama embeddings.
 
 ## Features
 
-- **Ingest Command**: Scans a configured examples folder and indexes all
-  TypeScript/JavaScript files with semantic embeddings
 - **MCP Server**: Exposes tools for AI agents to search and retrieve example
-  files
+  files and documentation
 - **Vector Search**: Uses Ollama embeddings (nomic-embed-text) for semantic
   search
+- **Hybrid Search**: Combines semantic and keyword matching for documentation
 - **Metadata Extraction**: Automatically extracts imports, exports, functions,
   and dependencies
+- **Dual Transport**: Supports both stdio (for MCP clients) and HTTP/SSE (for
+  web clients)
 
 ## Prerequisites
 
@@ -25,24 +26,38 @@ serves them via an MCP (Model Context Protocol) server for AI agent integration.
 
 2. **Deno**: Install from https://deno.land
 
-## Setup
+## Quick Start
 
-1. Create a `config.json` file:
+1. **Create a `config.json` file:**
    ```json
    {
      "examplesFolder": "./path/to/your/examples"
    }
    ```
 
-2. Ingest your examples:
+2. **Ingest your examples and documentation:**
    ```bash
    deno task ingest
    ```
 
-3. Start the MCP server:
+3. **Start the MCP server:**
    ```bash
-   deno task mcp
+   # Stdio mode (default, for MCP clients)
+   deno task start
+
+   # HTTP/SSE mode (for web clients or testing)
+   deno task start:http
    ```
+
+## Available Tasks
+
+| Task                   | Description                                          |
+| ---------------------- | ---------------------------------------------------- |
+| `deno task ingest`     | Index examples and documentation into the database   |
+| `deno task start`      | Start MCP server in stdio mode (default)             |
+| `deno task start:http` | Start MCP server with HTTP/SSE endpoint on port 3000 |
+| `deno task dev`        | Start MCP server with MCP Inspector for debugging    |
+| `deno task check`      | Run type checking                                    |
 
 ## Configuration
 
@@ -52,6 +67,47 @@ The `config.json` file should contain:
   absolute)
 
 See `config.json.example` for a template.
+
+## Server Modes
+
+The MCP server supports two transport modes:
+
+### Stdio Mode (Default)
+
+Standard mode for MCP clients that communicate via stdin/stdout:
+
+```bash
+deno task start
+```
+
+### HTTP/SSE Mode
+
+Exposes the MCP server over HTTP with Server-Sent Events for real-time
+communication. Useful for web clients and testing:
+
+```bash
+deno task start:http
+```
+
+This starts an HTTP server on `http://localhost:3000` with the following
+endpoints:
+
+- **`GET /sse`**: Server-Sent Events endpoint for receiving messages from the
+  server
+- **`POST /message`**: Send JSON-RPC messages to the server
+- **`GET /health`**: Health check endpoint that returns server status and client
+  count
+
+**Custom Port:**
+
+```bash
+deno run --allow-read --allow-write --allow-net --allow-env --allow-sys --allow-ffi src/cli.ts --http --port=8080
+```
+
+**Testing the HTTP endpoint:**
+
+Open `test-sse-client.html` in a browser to test the HTTP/SSE endpoint
+interactively, or run `./test-http-endpoint.sh` for curl-based testing.
 
 ## MCP Tools
 
@@ -143,12 +199,13 @@ applesauce-mcp/
 │   ├── types.ts            # Type definitions
 │   ├── config.ts           # Config file loader
 │   ├── commands/
-│   │   ├── ingest.ts       # Ingest command
 │   │   └── mcp.ts          # MCP server command
 │   └── lib/
 │       ├── database.ts     # LanceDB operations
 │       ├── embeddings.ts   # Ollama embedding client
 │       └── metadata.ts     # Code metadata extraction
+├── scripts/
+│   └── ingest.ts           # Ingest script (examples + docs)
 ├── data/
 │   └── lancedb/            # LanceDB database files (created on first ingest)
 ├── config.json             # Configuration file
@@ -159,16 +216,29 @@ applesauce-mcp/
 
 ## Development
 
-Run type checking:
+**Type checking:**
 
 ```bash
 deno task check
 ```
 
-Watch mode:
+**MCP Inspector (debugging):**
 
 ```bash
 deno task dev
+```
+
+**Ingest options:**
+
+```bash
+# Ingest only examples
+deno task ingest -- --examples-only
+
+# Ingest only documentation
+deno task ingest -- --docs-only
+
+# Ingest specific documentation category
+deno task ingest -- --docs-only --category=core
 ```
 
 ## License

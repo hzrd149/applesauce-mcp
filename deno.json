@@ -1,8 +1,9 @@
 {
   "tasks": {
-    "dev": "npx @modelcontextprotocol/inspector deno task mcp",
-    "ingest": "deno run --allow-read --allow-write --allow-net --allow-sys --allow-ffi --allow-env src/cli.ts ingest",
-    "mcp": "deno run --allow-read --allow-write --allow-net --allow-env --allow-sys --allow-ffi --watch src/cli.ts mcp",
+    "dev": "npx @modelcontextprotocol/inspector deno task start",
+    "ingest": "deno run --allow-read --allow-write --allow-net --allow-sys --allow-ffi --allow-env scripts/ingest.ts",
+    "start": "deno run --allow-read --allow-write --allow-net --allow-env --allow-sys --allow-ffi src/cli.ts",
+    "start:http": "deno run --allow-read --allow-write --allow-net --allow-env --allow-sys --allow-ffi src/cli.ts --http",
     "check": "deno check src/cli.ts",
     "submodule:init": "git submodule update --init --recursive",
     "submodule:update": "git submodule update --remote --merge",
@@ -20,7 +21,9 @@
     "@std/fs": "jsr:@std/fs@^1.0.22",
     "@std/path": "jsr:@std/path@^1.1.4",
     "apache-arrow": "npm:apache-arrow@^17.0.0",
-    "ollama": "npm:ollama@^0.6.3"
+    "hono": "npm:hono@^4.11.7",
+    "ollama": "npm:ollama@^0.6.3",
+    "zod": "npm:zod@^3.25.1"
   },
   "compilerOptions": {
     "lib": ["deno.ns", "deno.unstable", "dom"],
