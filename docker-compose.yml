@@ -17,19 +17,25 @@ services:
     depends_on:
       - ollama
     environment:
-      # Point to Ollama container
-      - OLLAMA_BASE_URL=http://ollama:11434
-    # volumes:
-      # Persist LanceDB data and applesauce repo
-      # - mcp_data:/app/data
+      # Embeddings provider configuration
+      - EMBEDDING_PROVIDER=ollama  # or "openai" for OpenAI-compatible providers
+      - EMBEDDING_MODEL=qwen3-embedding:4b
+
+      # Ollama configuration (when EMBEDDING_PROVIDER=ollama)
+      - OLLAMA_HOST=http://ollama:11434
+
+      # OpenAI-compatible configuration (when EMBEDDING_PROVIDER=openai)
+      # Uncomment and set these when using OpenAI, OpenRouter, etc.
+      # - OPENAI_API_KEY=sk-your-api-key-here
+      # - OPENAI_BASE_URL=https://api.openai.com/v1
+    volumes:
+      # Persist LanceDB data (applesauce repo is pre-cloned at /opt/applesauce)
+      - ./data:/app/data
     ports:
       - "3000:3000"
-    command: run -A src/cli.ts --mode http --port 3000
     restart: unless-stopped
 
 volumes:
   # Named volumes for persistence
   ollama_data:
     name: applesauce_ollama_data
-  # mcp_data:
-    # name: applesauce_mcp_data

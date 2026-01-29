@@ -6,11 +6,11 @@ import { Command } from "@cliffy/command";
 import { join } from "@std/path";
 import { APPLESAUCE_LOCAL_PATH } from "../const.ts";
 import {
+  type ExtractedMethod,
   getAllTypeScriptFiles,
   mapSourceToExportPath,
   parsePackageJson,
   parseTypeScriptFile,
-  type ExtractedMethod,
 } from "../lib/ts-parser.ts";
 
 /**
@@ -44,14 +44,20 @@ async function getPackageDirectories(): Promise<string[]> {
 /**
  * Parse and display methods from TypeScript files
  */
-async function debugMethods(options: { package?: string; limit?: number }): Promise<void> {
+async function debugMethods(
+  options: { package?: string; limit?: number },
+): Promise<void> {
   console.log("Parsing TypeScript files...\n");
 
   let packagesToProcess: string[];
 
   if (options.package) {
     // Process specific package
-    const packageRoot = join(APPLESAUCE_LOCAL_PATH, "packages", options.package);
+    const packageRoot = join(
+      APPLESAUCE_LOCAL_PATH,
+      "packages",
+      options.package,
+    );
     try {
       await Deno.stat(packageRoot);
       packagesToProcess = [packageRoot];
@@ -69,7 +75,9 @@ async function debugMethods(options: { package?: string; limit?: number }): Prom
     packagesToProcess = await getPackageDirectories();
   }
 
-  const allMethods: Array<ExtractedMethod & { packageName: string; importPath: string }> = [];
+  const allMethods: Array<
+    ExtractedMethod & { packageName: string; importPath: string }
+  > = [];
 
   for (const packageRoot of packagesToProcess) {
     // Parse package.json
@@ -119,7 +127,9 @@ async function debugMethods(options: { package?: string; limit?: number }): Prom
       }
     }
 
-    console.log(`  Found ${allMethods.length} methods from ${filesProcessed} files\n`);
+    console.log(
+      `  Found ${allMethods.length} methods from ${filesProcessed} files\n`,
+    );
   }
 
   // Apply limit
@@ -128,7 +138,9 @@ async function debugMethods(options: { package?: string; limit?: number }): Prom
 
   // Display results
   console.log(`${"=".repeat(80)}`);
-  console.log(`PARSED METHODS (showing ${displayMethods.length} of ${allMethods.length})`);
+  console.log(
+    `PARSED METHODS (showing ${displayMethods.length} of ${allMethods.length})`,
+  );
   console.log(`${"=".repeat(80)}\n`);
 
   for (const method of displayMethods) {
@@ -137,7 +149,9 @@ async function debugMethods(options: { package?: string; limit?: number }): Prom
 
     // Full import path (note if it's a class method)
     if (method.className) {
-      console.log(`  Class: ${method.className} (method cannot be imported directly)`);
+      console.log(
+        `  Class: ${method.className} (method cannot be imported directly)`,
+      );
       console.log(`  Import class from: ${method.importPath}`);
     } else {
       console.log(`  Import: ${method.importPath}`);
@@ -168,7 +182,9 @@ async function debugMethods(options: { package?: string; limit?: number }): Prom
   }
 
   console.log("\nBy Kind:");
-  for (const [kind, count] of Object.entries(byKind).sort((a, b) => b[1] - a[1])) {
+  for (
+    const [kind, count] of Object.entries(byKind).sort((a, b) => b[1] - a[1])
+  ) {
     console.log(`  ${kind.padEnd(12)}: ${count}`);
   }
 }
@@ -177,5 +193,9 @@ export default new Command()
   .description("Debug commands for testing TypeScript parsing")
   .command("methods", "Parse and display methods from TypeScript files")
   .option("-p, --package <name:string>", "Process specific package only")
-  .option("-l, --limit <limit:number>", "Maximum number of methods to display", { default: 20 })
+  .option(
+    "-l, --limit <limit:number>",
+    "Maximum number of methods to display",
+    { default: 20 },
+  )
   .action(debugMethods);

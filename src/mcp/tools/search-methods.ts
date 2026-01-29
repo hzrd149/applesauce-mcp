@@ -8,7 +8,7 @@ import { METHODS_TABLE_NAME } from "../../const.ts";
 export const searchMethodsTool: Tool = {
   name: "search_methods",
   description:
-    "Search exported methods, functions, classes, types, and interfaces from Applesauce packages using semantic search. Returns methods with their import paths, documentation, and usage information. Use this to find helper functions, utilities, and APIs available in the Applesauce library.",
+    "Search exported methods, functions, classes, types, and interfaces from Applesauce packages. Returns methods with their import paths, documentation, and usage information.",
   inputSchema: {
     type: "object",
     properties: {
@@ -56,23 +56,6 @@ export async function handleSearchMethods(
 
     lines.push(`## ${i + 1}. ${metadata.methodName || "Unknown"}`);
     lines.push("");
-    // lines.push(`**Kind:** ${metadata.kind || "unknown"}`);
-
-    // // Show import information
-    // if (metadata.className) {
-    //   lines.push(
-    //     `**Class:** ${metadata.className} *(method cannot be imported directly)*`,
-    //   );
-    //   lines.push(`**Import class from:** \`${metadata.importPath}\``);
-    // } else {
-    //   lines.push(`**Import:** \`${metadata.importPath}\``);
-    // }
-
-    // lines.push(
-    //   `**Package:** ${metadata.packageName}@${metadata.packageVersion}`,
-    // );
-    // lines.push(`**Source:** ${metadata.sourceFile}:${metadata.lineNumber}`);
-    // lines.push("");
 
     // Show the full content (includes documentation)
     lines.push(doc.pageContent);

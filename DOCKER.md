@@ -1,6 +1,7 @@
 # Docker Setup for Applesauce MCP
 
-This document describes how to run Applesauce MCP with Ollama using Docker Compose.
+This document describes how to run Applesauce MCP with Ollama using Docker
+Compose.
 
 ## Quick Start
 
@@ -18,12 +19,14 @@ docker compose down
 ## Services
 
 ### Ollama Service
+
 - **Image**: `ollama/ollama:latest`
 - **Port**: 11434
 - **Volume**: `applesauce_ollama_data` (persists downloaded models)
 - **Health Check**: Checks if Ollama API is responsive
 
 ### MCP Service
+
 - **Image**: Built from `Dockerfile` (Deno + application code)
 - **Port**: 3000
 - **Volume**: `applesauce_mcp_data` (persists LanceDB and applesauce repo)
@@ -35,7 +38,7 @@ On the first startup, the MCP container will:
 
 1. Clone the applesauce repository (`setup` command)
 2. Ingest documentation and examples (`ingest` command)
-3. Download the embedding model from Ollama (`qwen3-embedding:8b`)
+3. Download the embedding model from Ollama (`qwen3-embedding:4b`)
 4. Start the MCP HTTP server on port 3000
 
 This process may take several minutes depending on your network connection.
@@ -81,7 +84,7 @@ Edit `docker-compose.yml`:
 services:
   mcp:
     ports:
-      - "8080:3000"  # Change host port to 8080
+      - "8080:3000" # Change host port to 8080
 ```
 
 ### Use Different Embedding Model
@@ -156,8 +159,8 @@ docker compose up -d
 
 Available environment variables for the MCP container:
 
-| Variable | Default | Description |
-|----------|---------|-------------|
+| Variable      | Default               | Description         |
+| ------------- | --------------------- | ------------------- |
 | `OLLAMA_HOST` | `http://ollama:11434` | Ollama API endpoint |
 
 To override, edit `docker-compose.yml`:

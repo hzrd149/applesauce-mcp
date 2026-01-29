@@ -7,7 +7,6 @@ import {
   RecursiveCharacterTextSplitter,
 } from "@langchain/textsplitters";
 import { join } from "@std/path";
-import ollama from "ollama";
 import {
   APPLESAUCE_LOCAL_PATH,
   DB_PATH,
@@ -15,7 +14,6 @@ import {
   DOCS_CHUNK_SIZE,
   DOCS_ROOT,
   DOCS_TABLE_NAME,
-  EMBEDDING_MODEL,
   EXAMPLES_CHUNK_OVERLAP,
   EXAMPLES_CHUNK_SIZE,
   EXAMPLES_ROOT,
@@ -77,14 +75,6 @@ export async function ingestExamples(): Promise<void> {
     Deno.exit(1);
   }
 
-  // Download the embedding model if it's not already downloaded
-  const models = await ollama.list();
-  if (!models.models.some((m) => m.name === EMBEDDING_MODEL)) {
-    console.log("Downloading embedding model...");
-    await ollama.pull({ model: EMBEDDING_MODEL });
-    console.log("Embedding model downloaded");
-  }
-
   console.log("Ingesting examples...");
   // Load all .ts/.tsx files from folder recursively
   const loader = new DirectoryLoader(EXAMPLES_ROOT, {
@@ -125,14 +115,6 @@ export async function ingestMethods(): Promise<void> {
       "Applesauce repository not found. Please run 'applesauce-mcp setup' first.",
     );
     Deno.exit(1);
-  }
-
-  // Download the embedding model if it's not already downloaded
-  const models = await ollama.list();
-  if (!models.models.some((m) => m.name === EMBEDDING_MODEL)) {
-    console.log("Downloading embedding model...");
-    await ollama.pull({ model: EMBEDDING_MODEL });
-    console.log("Embedding model downloaded");
   }
 
   console.log("Discovering applesauce packages...");

@@ -3,6 +3,7 @@ import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { isApplesauceRepoValid } from "../lib/git.ts";
+import { areAllTablesIngested } from "../lib/lancedb.ts";
 import * as logger from "../lib/logger.ts";
 import createApplesauceMCPServer from "../mcp/server.ts";
 import { runSetup } from "./setup.ts";
@@ -24,9 +25,18 @@ export async function mcpCommand(
   // Set silent mode for stdio to prevent corrupting MCP protocol
   logger.setSilentMode(mode === "stdio");
 
-  // Ensure repo is set up; run setup if not (or exit in stdio to avoid corrupting protocol)
-  if (!await isApplesauceRepoValid()) {
-    logger.warn("Repository not set up. Running setup...");
+  // Check if repository exists and all tables are ingested
+  const repoValid = await isApplesauceRepoValid();
+  const tablesIngested = await areAllTablesIngested();
+
+  if (!repoValid || !tablesIngested) {
+    if (!repoValid) {
+      logger.warn("Repository not set up.");
+    }
+    if (!tablesIngested) {
+      logger.warn("Database tables not ingested (docs, examples, methods).");
+    }
+    logger.warn("Running setup to clone repository and ingest data...");
     await runSetup();
   }
 

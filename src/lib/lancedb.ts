@@ -8,9 +8,21 @@ import lancedb from "@lancedb/lancedb";
 import type * as lancedbTypes from "@lancedb/lancedb";
 import { Index } from "@lancedb/lancedb";
 import { LanceDB } from "@langchain/community/vectorstores/lancedb";
+import type { Embeddings } from "@langchain/core/embeddings";
 import { OllamaEmbeddings } from "@langchain/ollama";
-import ollama from "ollama";
-import { DB_PATH, DOCS_TABLE_NAME, EMBEDDING_MODEL } from "../const.ts";
+import { OpenAIEmbeddings } from "@langchain/openai";
+import { Ollama } from "ollama";
+import {
+  DB_PATH,
+  DOCS_TABLE_NAME,
+  EMBEDDING_MODEL,
+  EMBEDDING_PROVIDER,
+  EXAMPLES_TABLE_NAME,
+  METHODS_TABLE_NAME,
+  OLLAMA_HOST,
+  OPENAI_API_KEY,
+  OPENAI_BASE_URL,
+} from "../const.ts";
 import type { DocChunk, DocSearchResult } from "../types.ts";
 import * as logger from "./logger.ts";
 
@@ -35,21 +47,80 @@ export async function getTable(name: string): Promise<lancedb.Table> {
   return db.openTable(name);
 }
 
-let embeddingsInstance: OllamaEmbeddings | null = null;
+let embeddingsInstance: Embeddings | null = null;
 
-/** Get the embeddings instance and ensure the model is downloaded */
-export async function getEmbeddings(): Promise<OllamaEmbeddings> {
-  if (!embeddingsInstance) {
-    // Download the embedding model if it's not already downloaded
-    const models = await ollama.list();
-    if (!models.models.some((m) => m.name === EMBEDDING_MODEL)) {
-      console.log("Downloading embedding model...");
-      await ollama.pull({ model: EMBEDDING_MODEL });
-      console.log("Embedding model downloaded");
+/**
+ * Get the embeddings instance based on the configured provider.
+ * Supports Ollama and OpenAI-compatible providers.
+ * For Ollama, ensures the model is downloaded before use.
+ *
+ * @returns Embeddings instance (OllamaEmbeddings or OpenAIEmbeddings)
+ * @throws Error if provider is invalid or configuration is missing
+ */
+export async function getEmbeddings(): Promise<Embeddings> {
+  if (embeddingsInstance) {
+    return embeddingsInstance;
+  }
+
+  const provider = EMBEDDING_PROVIDER.toLowerCase();
+
+  if (provider === "ollama") {
+    // Ollama provider: download model if needed
+    try {
+      const ollamaClient = new Ollama({ host: OLLAMA_HOST });
+      const models = await ollamaClient.list();
+      if (
+        !models.models.some((m: { name: string }) => m.name === EMBEDDING_MODEL)
+      ) {
+        logger.log(`Downloading embedding model: ${EMBEDDING_MODEL}...`);
+        await ollamaClient.pull({ model: EMBEDDING_MODEL });
+        logger.log("Embedding model downloaded");
+      }
+    } catch (error) {
+      throw new Error(
+        `Failed to connect to Ollama at ${OLLAMA_HOST}: ${error}`,
+      );
     }
 
-    embeddingsInstance = new OllamaEmbeddings({ model: EMBEDDING_MODEL });
+    embeddingsInstance = new OllamaEmbeddings({
+      model: EMBEDDING_MODEL,
+      baseUrl: OLLAMA_HOST,
+    });
+  } else if (provider === "openai") {
+    // OpenAI-compatible provider
+    if (!OPENAI_API_KEY) {
+      throw new Error(
+        "OPENAI_API_KEY environment variable is required when using OpenAI provider",
+      );
+    }
+
+    if (!EMBEDDING_MODEL) {
+      throw new Error(
+        "EMBEDDING_MODEL environment variable is required when using OpenAI provider",
+      );
+    }
+
+    embeddingsInstance = new OpenAIEmbeddings({
+      model: EMBEDDING_MODEL,
+      apiKey: OPENAI_API_KEY,
+      configuration: {
+        baseURL: OPENAI_BASE_URL,
+      },
+    }) as unknown as Embeddings;
+
+    logger.log(
+      `Initialized OpenAI embeddings: ${EMBEDDING_MODEL} at ${OPENAI_BASE_URL}`,
+    );
+  } else {
+    throw new Error(
+      `Invalid EMBEDDING_PROVIDER: "${EMBEDDING_PROVIDER}". Must be "ollama" or "openai"`,
+    );
   }
+
+  if (!embeddingsInstance) {
+    throw new Error("Failed to initialize embeddings instance");
+  }
+
   return embeddingsInstance;
 }
 
@@ -330,4 +401,34 @@ export async function getDocsStats(): Promise<{
 export function closeDocsDatabase() {
   docsTable = null;
   ftsEnabled = false;
+}
+
+// ---------------------------------------------------------------------------
+// Database validation
+// ---------------------------------------------------------------------------
+
+/**
+ * Check if all required tables (docs, examples, methods) exist in the database.
+ * Returns true only if all three tables are present, indicating data has been ingested.
+ *
+ * @returns Promise<boolean> - true if all tables exist, false otherwise
+ */
+export async function areAllTablesIngested(): Promise<boolean> {
+  try {
+    const db = await getDatabase();
+    const tableNames = await db.tableNames();
+
+    const requiredTables = [
+      DOCS_TABLE_NAME,
+      EXAMPLES_TABLE_NAME,
+      METHODS_TABLE_NAME,
+    ];
+    const allTablesExist = requiredTables.every((table) =>
+      tableNames.includes(table)
+    );
+
+    return allTablesExist;
+  } catch {
+    return false;
+  }
 }

@@ -8,7 +8,7 @@ import { DOCS_TABLE_NAME } from "../../const.ts";
 export const searchDocsTool: Tool = {
   name: "search_docs",
   description:
-    "Search Applesauce documentation using semantic (vector) search. Returns formatted markdown with relevant documentation chunks and context.",
+    "Search Applesauce documentation. Returns formatted markdown with relevant documentation.",
   inputSchema: {
     type: "object",
     properties: {

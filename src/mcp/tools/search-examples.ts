@@ -27,7 +27,7 @@ function nameFromSource(
 export const searchExamplesTool: Tool = {
   name: "search_examples",
   description:
-    "Search example files semantically using pre-computed embeddings. Returns relevant examples with name, description snippet, and category.",
+    "Search working example apps. Returns relevant examples with name and description snippet.",
   inputSchema: {
     type: "object",
     properties: {

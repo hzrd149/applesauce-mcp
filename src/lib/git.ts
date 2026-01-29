@@ -35,7 +35,7 @@ export async function isApplesauceRepoValid(): Promise<boolean> {
 }
 
 /**
- * Clone the applesauce repository to ./data/applesauce
+ * Clone the applesauce repository to the configured path (default: ./data/applesauce)
  * If directory exists and is a git repo, skip cloning
  * If directory exists but is not a git repo, throw error
  */
