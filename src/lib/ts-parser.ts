@@ -57,7 +57,9 @@ export function parseTypeScriptFile(
     // Handle exported function declarations
     if (ts.isFunctionDeclaration(node) && node.name) {
       const isExported = hasExportModifier(node);
-      if (isExported) {
+      // Skip function overloads (declarations without body)
+      // Only capture the actual implementation
+      if (isExported && node.body) {
         methods.push(extractMethodInfo(node, node.name, "function", relativeSourceFile, checker));
       }
     }
@@ -72,7 +74,9 @@ export function parseTypeScriptFile(
         node.members?.forEach((member: ts.ClassElement) => {
           if (ts.isMethodDeclaration(member) && member.name) {
             const isPublic = !hasModifier(member, ts.SyntaxKind.PrivateKeyword);
-            if (isPublic && ts.isIdentifier(member.name)) {
+            // Skip method overloads (declarations without body)
+            // Only capture the actual implementation
+            if (isPublic && ts.isIdentifier(member.name) && member.body) {
               const methodInfo = extractMethodInfo(member, member.name, "method", relativeSourceFile, checker);
               methodInfo.methodName = `${node.name!.text}.${member.name.text}`;
               methodInfo.className = node.name!.text;
