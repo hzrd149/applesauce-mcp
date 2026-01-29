@@ -1,23 +1,12 @@
-# Applesauce Examples MCP Server
+# Applesauce MCP Server
 
-An MCP (Model Context Protocol) server that provides semantic search over code
-examples and documentation using LanceDB vector database and Ollama embeddings.
-
-## Features
-
-- **MCP Server**: Exposes tools for AI agents to search and retrieve example
-  files and documentation
-- **Vector Search**: Uses Ollama embeddings (nomic-embed-text) for semantic
-  search
-- **Hybrid Search**: Combines semantic and keyword matching for documentation
-- **Metadata Extraction**: Automatically extracts imports, exports, functions,
-  and dependencies
-- **Dual Transport**: Supports both stdio (for MCP clients) and HTTP/SSE (for
-  web clients)
+An MCP (Model Context Protocol) server that provides semantic search over
+[Applesauce](https://github.com/coracle-social/applesauce) code examples and
+documentation using LanceDB vector database and Ollama embeddings.
 
 ## Prerequisites
 
-1. **Ollama**: Must be running locally
+1. **Ollama**: Must be running locally with the embedding model
    ```bash
    # Install Ollama from https://ollama.ai
    # Then pull the embedding model:
@@ -26,106 +15,116 @@ examples and documentation using LanceDB vector database and Ollama embeddings.
 
 2. **Deno**: Install from https://deno.land
 
-## Quick Start
+## Installation
 
-1. **Create a `config.json` file:**
-   ```json
-   {
-     "examplesFolder": "./path/to/your/examples"
-   }
-   ```
+### Option 1: Quick Setup (Recommended)
 
-2. **Ingest your examples and documentation:**
-   ```bash
-   deno task ingest
-   ```
+Clone and set up everything in one command:
 
-3. **Start the MCP server:**
-   ```bash
-   # Stdio mode (default, for MCP clients)
-   deno task start
+```bash
+git clone https://github.com/YOUR_USERNAME/applesauce-mcp.git
+cd applesauce-mcp
+deno task cli setup
+```
 
-   # HTTP/SSE mode (for web clients or testing)
-   deno task start:http
-   ```
+This will:
+1. Clone the applesauce repository to `data/applesauce/`
+2. Ingest documentation and examples into the vector database
+3. Set up everything needed to run the MCP server
 
-## Available Tasks
+### Option 2: Manual Setup
 
-| Task                   | Description                                          |
-| ---------------------- | ---------------------------------------------------- |
-| `deno task ingest`     | Index examples and documentation into the database   |
-| `deno task start`      | Start MCP server in stdio mode (default)             |
-| `deno task start:http` | Start MCP server with HTTP/SSE endpoint on port 3000 |
-| `deno task dev`        | Start MCP server with MCP Inspector for debugging    |
-| `deno task check`      | Run type checking                                    |
+```bash
+# 1. Clone this repository
+git clone https://github.com/YOUR_USERNAME/applesauce-mcp.git
+cd applesauce-mcp
 
-## Configuration
+# 2. Clone the applesauce repository
+deno task cli setup
 
-The `config.json` file should contain:
+# 3. Update applesauce repo (optional, if already cloned)
+deno task cli update
 
-- `examplesFolder`: Path to the directory containing example files (relative or
-  absolute)
+# 4. Ingest documentation and examples
+deno task cli ingest
+```
 
-See `config.json.example` for a template.
-
-## Server Modes
-
-The MCP server supports two transport modes:
+## Running the MCP Server
 
 ### Stdio Mode (Default)
 
-Standard mode for MCP clients that communicate via stdin/stdout:
+For MCP clients that communicate via stdin/stdout:
 
 ```bash
-deno task start
+deno task cli
 ```
 
-### HTTP/SSE Mode
+### HTTP Mode
 
-Exposes the MCP server over HTTP with Server-Sent Events for real-time
-communication. Useful for web clients and testing:
+For web clients or testing with HTTP/SSE:
 
 ```bash
-deno task start:http
+deno task cli -- --mode http --port 3000
 ```
 
-This starts an HTTP server on `http://localhost:3000` with the following
-endpoints:
+Endpoints available:
+- `GET /sse` - Server-Sent Events endpoint
+- `POST /message` - Send JSON-RPC messages
+- `GET /health` - Health check
 
-- **`GET /sse`**: Server-Sent Events endpoint for receiving messages from the
-  server
-- **`POST /message`**: Send JSON-RPC messages to the server
-- **`GET /health`**: Health check endpoint that returns server status and client
-  count
+### Development Mode
 
-**Custom Port:**
+Run with MCP Inspector for debugging:
 
 ```bash
-deno run --allow-read --allow-write --allow-net --allow-env --allow-sys --allow-ffi src/cli.ts --http --port=8080
+deno task dev
 ```
-
-**Testing the HTTP endpoint:**
-
-Open `test-sse-client.html` in a browser to test the HTTP/SSE endpoint
-interactively, or run `./test-http-endpoint.sh` for curl-based testing.
 
 ## MCP Tools
 
-The MCP server exposes three tools:
+The server exposes 6 tools for searching and retrieving Applesauce documentation
+and examples:
 
-### 1. search_examples
+### Documentation Tools
 
-Search for examples using natural language or keywords. Returns only basic
-information (name, description, category) to help you identify relevant
-examples. Use `get_example` to retrieve the full code.
+#### 1. `search_docs`
+
+Search Applesauce documentation using semantic vector search.
 
 **Parameters:**
+- `query` (required): Search query (e.g., "How do I use EventStore?")
+- `limit` (optional): Max results, 1-20 (default: 5)
 
-- `query` (required): Search query
-- `limit` (optional): Max results (default: 5)
+**Returns:** Formatted markdown with relevant documentation chunks
+
+#### 2. `list_docs`
+
+List all available documentation files with their paths and descriptions.
+
+**Parameters:** None
+
+**Returns:** Array of documentation files with metadata
+
+#### 3. `read_docs`
+
+Read full content of a specific documentation file.
+
+**Parameters:**
+- `path` (required): Documentation file path (e.g., "core/EventStore.md")
+
+**Returns:** Complete documentation file content
+
+### Example Code Tools
+
+#### 4. `search_examples`
+
+Search example code files using semantic vector search.
+
+**Parameters:**
+- `query` (required): Search query (e.g., "async profile loading")
+- `limit` (optional): Max results, 1-20 (default: 5)
 
 **Returns:**
-
 ```json
 [
   {
@@ -136,108 +135,103 @@ examples. Use `get_example` to retrieve the full code.
 ]
 ```
 
-**Example:**
+#### 5. `list_examples`
 
-```json
-{
-  "query": "async profile loading",
-  "limit": 3
-}
-```
-
-### 2. list_examples
-
-List all available examples with their names and descriptions.
+List all available example files.
 
 **Parameters:** None
 
-### 3. get_example
+**Returns:** Array of example files with names and descriptions
 
-Retrieve the full code and details for a specific example by name. Use this
-after `search_examples` to get the actual code.
+#### 6. `read_example`
+
+Read full code and metadata for a specific example.
 
 **Parameters:**
-
-- `name` (required): Example name (file path without extension)
+- `name` (required): Example name (path without extension, e.g., "casting/threads")
 
 **Returns:**
-
 ```json
 {
   "name": "casting/threads",
   "description": "Example showing how to work with threads",
   "category": "casting",
   "filePath": "casting/threads.tsx",
-  "code": "// Full example code here...",
-  "dependencies": ["applesauce-core", "react"]
+  "code": "// Full example code...",
+  "imports": [...],
+  "exports": [...],
+  "functions": [...],
+  "dependencies": [...]
 }
 ```
 
-**Example:**
+## Configuration
+
+### Updating the Repository
+
+Keep the applesauce repository up to date:
+
+```bash
+deno task cli update
+```
+
+### Re-ingesting Data
+
+After updating the repository or when documentation/examples change:
+
+```bash
+# Ingest everything
+deno task cli ingest
+
+# Ingest only documentation
+deno task cli ingest -- --docs-only
+
+# Ingest only examples
+deno task cli ingest -- --examples-only
+```
+
+## Using with MCP Clients
+
+Add to your MCP client configuration (e.g., Claude Desktop):
 
 ```json
 {
-  "name": "casting/threads"
+  "mcpServers": {
+    "applesauce": {
+      "command": "deno",
+      "args": [
+        "run",
+        "--allow-read",
+        "--allow-write",
+        "--allow-net",
+        "--allow-env",
+        "--allow-sys",
+        "--allow-ffi",
+        "--allow-run",
+        "/path/to/applesauce-mcp/src/cli.ts"
+      ]
+    }
+  }
 }
 ```
 
-## Example Naming
-
-Example names are the file path relative to the examples folder, minus the
-extension:
-
-- `casting/threads.tsx` → `casting/threads`
-- `cache/window.nostrdb.tsx` → `cache/window.nostrdb`
-- `simple.ts` → `simple`
-
-## Project Structure
-
-```
-applesauce-mcp/
-├── src/
-│   ├── cli.ts              # Main CLI entry point
-│   ├── types.ts            # Type definitions
-│   ├── config.ts           # Config file loader
-│   ├── commands/
-│   │   └── mcp.ts          # MCP server command
-│   └── lib/
-│       ├── lancedb.ts       # LanceDB service (embeddings, examples, docs, hybrid search)
-│       └── metadata.ts     # Code metadata extraction
-├── scripts/
-│   └── ingest.ts           # Ingest script (examples + docs)
-├── data/
-│   └── lancedb/            # LanceDB database files (created on first ingest)
-├── config.json             # Configuration file
-├── config.json.example     # Example configuration
-├── deno.json               # Deno configuration
-└── README.md               # This file
-```
-
-## Development
-
-**Type checking:**
+## Example Workflow
 
 ```bash
-deno task check
-```
+# 1. Initial setup
+deno task cli setup
 
-**MCP Inspector (debugging):**
+# 2. Start the MCP server
+deno task cli
 
-```bash
-deno task dev
-```
+# 3. In your MCP client, you can now:
+#    - Search docs: "How do I use RelayPool?"
+#    - Search examples: "Show me thread examples"
+#    - Read specific files: read_example("casting/threads")
 
-**Ingest options:**
-
-```bash
-# Ingest only examples
-deno task ingest -- --examples-only
-
-# Ingest only documentation
-deno task ingest -- --docs-only
-
-# Ingest specific documentation category
-deno task ingest -- --docs-only --category=core
+# 4. Keep it updated
+deno task cli update
+deno task cli ingest
 ```
 
 ## License
