@@ -24,3 +24,4 @@ export const EXAMPLES_CHUNK_OVERLAP = 200;
 /** Database table names */
 export const DOCS_TABLE_NAME = "docs";
 export const EXAMPLES_TABLE_NAME = "examples";
+export const METHODS_TABLE_NAME = "methods";

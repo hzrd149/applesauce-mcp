@@ -1,0 +1,18 @@
+# Ignore data directory (will be created in container)
+data/
+
+# Ignore development files
+.vscode/
+.git/
+.github/
+
+# Ignore OS files
+.DS_Store
+Thumbs.db
+
+# Ignore log files
+*.log
+
+# Ignore temporary files
+*.tmp
+*.temp

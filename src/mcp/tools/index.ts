@@ -4,3 +4,4 @@ export * from "./list-examples.ts";
 export * from "./read-docs.ts";
 export * from "./search-docs.ts";
 export * from "./search-examples.ts";
+export * from "./search-methods.ts";

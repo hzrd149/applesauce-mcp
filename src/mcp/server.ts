@@ -15,12 +15,14 @@ import {
   handleReadExample,
   handleSearchDocs,
   handleSearchExamples,
+  handleSearchMethods,
   listDocsTool,
   listExamplesTool,
   readDocTool,
   readExampleTool,
   searchDocsTool,
   searchExamplesTool,
+  searchMethodsTool,
 } from "./tools/index.ts";
 
 /**
@@ -33,6 +35,7 @@ const TOOLS = {
   "search_docs": searchDocsTool,
   "list_docs": listDocsTool,
   "read_doc": readDocTool,
+  "search_methods": searchMethodsTool,
 } as const;
 
 const TOOL_HANDLERS: Record<
@@ -45,6 +48,7 @@ const TOOL_HANDLERS: Record<
   "search_docs": handleSearchDocs,
   "list_docs": handleListDocs,
   "read_doc": handleReadDoc,
+  "search_methods": handleSearchMethods,
 } as const;
 
 export default function createApplesauceMCPServer(): Server {

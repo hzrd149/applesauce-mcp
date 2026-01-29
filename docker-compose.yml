@@ -1,0 +1,35 @@
+services:
+  # Ollama service for embeddings
+  ollama:
+    image: ollama/ollama:latest
+    container_name: applesauce-ollama
+    volumes:
+      # Persist Ollama models between restarts
+      - ollama_data:/root/.ollama
+    # ports:
+    #   - "11434:11434"
+    restart: unless-stopped
+
+  # MCP server
+  mcp:
+    build: .
+    container_name: applesauce-mcp
+    depends_on:
+      - ollama
+    environment:
+      # Point to Ollama container
+      - OLLAMA_BASE_URL=http://ollama:11434
+    # volumes:
+      # Persist LanceDB data and applesauce repo
+      # - mcp_data:/app/data
+    ports:
+      - "3000:3000"
+    command: run -A src/cli.ts --mode http --port 3000
+    restart: unless-stopped
+
+volumes:
+  # Named volumes for persistence
+  ollama_data:
+    name: applesauce_ollama_data
+  # mcp_data:
+    # name: applesauce_mcp_data

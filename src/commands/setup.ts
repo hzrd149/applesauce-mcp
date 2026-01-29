@@ -4,7 +4,7 @@
 
 import { Command } from "@cliffy/command";
 import { cloneApplesauceRepo, isApplesauceRepoValid } from "../lib/git.ts";
-import { ingestDocs, ingestExamples } from "./ingest.ts";
+import { ingestDocs, ingestExamples, ingestMethods } from "./ingest.ts";
 
 /**
  * Main setup function that clones repo and runs ingestion.
@@ -31,6 +31,7 @@ export async function runSetup(): Promise<void> {
 
   await ingestDocs();
   await ingestExamples();
+  await ingestMethods();
 
   console.log("Setup complete! You can now start the MCP server.");
 }
