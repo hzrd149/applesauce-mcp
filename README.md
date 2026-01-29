@@ -201,8 +201,7 @@ applesauce-mcp/
 │   ├── commands/
 │   │   └── mcp.ts          # MCP server command
 │   └── lib/
-│       ├── database.ts     # LanceDB operations
-│       ├── embeddings.ts   # Ollama embedding client
+│       ├── lancedb.ts       # LanceDB service (embeddings, examples, docs, hybrid search)
 │       └── metadata.ts     # Code metadata extraction
 ├── scripts/
 │   └── ingest.ts           # Ingest script (examples + docs)

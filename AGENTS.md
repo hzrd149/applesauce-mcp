@@ -6,163 +6,118 @@ codebase structure, development commands, and style guidelines.
 ## Project Overview
 
 **Applesauce MCP** is a Deno-based Model Context Protocol (MCP) server that
-provides semantic search over code examples using LanceDB and Ollama embeddings.
-The project includes a reference monorepo as a git submodule
-(`reference/applesauce/`).
+provides semantic search over code examples and documentation using LanceDB
+vector database and Ollama embeddings. The CLI tool automatically manages a
+local clone of the applesauce repository in `data/applesauce/`.
 
 ### Project Structure
 
 ```
 applesauce-mcp/              # Main Deno project
 ├── src/
-│   ├── cli.ts               # CLI entry point (MCP server)
+│   ├── cli.ts               # CLI entry point (Cliffy-based)
+│   ├── const.ts             # Configuration constants
 │   ├── types.ts             # Type definitions
-│   ├── config.ts            # Configuration loader
-│   ├── commands/            # Command implementations (mcp)
-│   └── lib/                 # Core libraries (database, embeddings, metadata, http-transport)
-├── scripts/
-│   └── ingest.ts            # Ingest script (examples + docs)
-├── data/lancedb/            # Database storage (gitignored)
-├── reference/applesauce/    # Git submodule: Node.js/pnpm monorepo
+│   ├── commands/            # Command implementations
+│   │   ├── setup.ts         # Clone applesauce repo
+│   │   ├── update.ts        # Update applesauce repo
+│   │   ├── ingest.ts          # Ingest examples and docs
+│   │   └── mcp.ts           # MCP server (stdio/HTTP)
+│   ├── lib/                 # Core libraries
+│   │   ├── lancedb.ts       # LanceDB service (connection, embeddings, examples, docs, hybrid search)
+│   │   ├── metadata.ts      # Code metadata extraction
+│   │   ├── git.ts           # Git operations
+│   │   └── logger.ts        # Logging utilities
+│   ├── loaders/             # Custom document loaders
+│   └── tools/               # MCP tools (search, read, list)
 └── deno.json                # Deno configuration
-
-reference/applesauce/        # Reference monorepo (submodule)
-├── packages/                # 13 packages (wallet, signers, relay, react, etc.)
-├── apps/                    # 3 apps (docs, examples, snippets)
-└── pnpm-workspace.yaml      # pnpm workspace config
 ```
 
 ## Build, Test, and Lint Commands
 
-### Main Project (Deno)
+### Development Commands
 
 ```bash
-# Development and running
+# Setup and initialization
+deno task cli setup        # Clone applesauce repo to data/applesauce
+deno task cli update       # Pull latest changes from applesauce repo
+deno task cli ingest       # Ingest documentation and examples into the local database
+
+# Running the MCP server
 deno task dev              # Run MCP server with MCP Inspector
-deno task start            # Start MCP server in stdio mode (with --watch)
-deno task start:http       # Start MCP server in HTTP/SSE mode (with --watch)
-deno task ingest           # Ingest example files and documentation
-deno task check            # Type checking
+deno task cli              # Run CLI (default: start stdio server)
+deno task cli -- --mode http --port 8080  # HTTP mode on custom port
 
-# Git submodule management
-deno task submodule:init   # Initialize git submodules
-deno task submodule:update # Update submodules
-deno task submodule:sync   # Sync submodules
+# Type checking
+deno task check            # Type check src/cli.ts entry point
 
-# Formatting (using Deno's built-in formatter)
-deno fmt                   # Format all files
+# Formatting (Deno's built-in)
+deno fmt                   # Format all TypeScript files
 deno fmt --check           # Check formatting without writing
+deno fmt src/              # Format only src/ directory
 
-# Linting (using Deno's built-in linter)
+# Linting (Deno's built-in)
 deno lint                  # Lint all files
 deno lint --fix            # Auto-fix linting issues
 
-# Testing (not yet implemented)
-# When adding tests, use: deno test --allow-read --allow-write --allow-net
+# Testing
+deno test                                        # Run all tests
+deno test src/lib/database.test.ts              # Run single test file
+deno test --allow-read --allow-write --allow-net # With permissions
 ```
 
 ## Code Style Guidelines
 
 ### File Organization
 
-- **File naming**: Use kebab-case (e.g., `database.ts`, `embeddings.ts`)
+- **File naming**: kebab-case (e.g., `lancedb.ts`, `metadata.ts`)
 - **Function naming**: camelCase with descriptive names
-- **Type naming**: PascalCase for interfaces/types (e.g., `ExampleRecord`,
-  `SearchParams`)
-- **Constants**: SCREAMING_SNAKE_CASE (e.g., `DB_PATH`, `TABLE_NAME`,
-  `EMBEDDING_MODEL`)
-- **Directory structure**: Feature-based organization (commands/, lib/, types.ts
-  at root)
+- **Type naming**: PascalCase (e.g., `ExampleRecord`, `SearchParams`)
+- **Constants**: SCREAMING_SNAKE_CASE (e.g., `DB_PATH`, `EMBEDDING_MODEL`)
+- **Directory structure**: Feature-based (commands/, lib/, tools/)
 
 ### Imports
 
-**Main Project (Deno)**:
+Always use `.ts` extensions in relative imports. Group imports in order:
 
-- Always use `.ts` file extensions in relative imports
-- Import from Deno standard library via JSR: `@std/path`, `@std/fs`,
-  `@std/crypto`
-- Use named imports (no default exports)
-- Group imports: standard library → external packages → relative imports
+1. Deno standard library (`@std/*`)
+2. External packages (npm/JSR)
+3. Relative imports
 
 ```typescript
-// Standard library imports
+// Deno standard library (JSR imports)
 import { walk } from "@std/fs";
-import { relative, resolve } from "@std/path";
+import { resolve } from "@std/path";
 
-// External package imports
+// External packages
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
+import ollama from "ollama";
 
 // Relative imports with .ts extension
 import { type ExampleRecord } from "../types.ts";
-import { initDatabase } from "./lib/database.ts";
+import { initDatabase } from "./lib/lancedb.ts";
 ```
 
-**Reference Monorepo (Node.js)**:
-
-- Use `.js` file extensions in imports (TypeScript NodeNext module resolution)
-- Leverage barrel exports via `index.ts` files
-- Use type-only imports when appropriate: `import { type Foo } from "./bar.js"`
+**Type-only imports**: Use `type` keyword when importing only types
 
 ```typescript
-// Type-only imports
-import { type IAsyncEventStoreActions } from "applesauce-core";
-
-// Regular imports
-import { makeAuthEvent } from "nostr-tools/nip42";
-import { BehaviorSubject, Observable } from "rxjs";
+import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
+import { type SearchParams } from "../types.ts";
 ```
 
 ### TypeScript and Types
 
-- **Strict mode**: Always enabled (`"strict": true`)
-- **Explicit types**: Prefer explicit return types on functions
-- **Type-only imports**: Use `import { type Foo }` when importing only types
-- **No `any`**: Avoid `any` types; use `unknown` if type is truly unknown
-- **Interfaces vs Types**: Use `interface` for object shapes, `type` for
-  unions/utilities
-
-```typescript
-/** JSDoc comment describing the function */
-export async function searchExamples(
-  params: SearchParams,
-  queryVector: number[],
-): Promise<ExampleRecord[]> {
-  // Implementation
-}
-```
-
-### Error Handling
-
-**MCP Tool Errors**: Return error objects, don't throw
-
-```typescript
-try {
-  // Tool implementation
-} catch (error) {
-  const message = error instanceof Error ? error.message : String(error);
-  return {
-    content: [{
-      type: "text",
-      text: JSON.stringify({ error: message }, null, 2),
-    }],
-    isError: true,
-  };
-}
-```
-
-### Comments and Documentation
-
-- Use JSDoc style for file headers and exported functions
-- Include parameter descriptions for complex functions
-- Add inline comments for non-obvious logic
-- Keep comments concise and up-to-date
+- **Strict mode**: Always enabled in `deno.json`
+- **Explicit return types**: Required for exported functions
+- **No `any`**: Use `unknown` for truly unknown types
+- **Interfaces vs Types**: `interface` for object shapes, `type` for unions
 
 ```typescript
 /**
- * Search examples using vector similarity and optional filters
+ * Search examples using vector similarity
  *
  * @param params - Search parameters (query, limit)
- * @param queryVector - Pre-computed embedding vector for the query
+ * @param queryVector - Pre-computed embedding vector
  * @returns Array of matching example records
  */
 export async function searchExamples(
@@ -173,21 +128,86 @@ export async function searchExamples(
 }
 ```
 
-## CLI Usage and Cliffy
+### Error Handling
 
-This project uses [Cliffy](https://cliffy.dev/) for building the CLI. When
-extending commands:
+**General errors**: Throw descriptive errors with context
 
-- Use Cliffy's command parsing for robust argument handling
-- Provide clear help text and examples
-- Validate inputs early with helpful error messages
+```typescript
+if (!db) {
+  throw new Error("Database not initialized. Call initDatabase() first.");
+}
+```
 
-## Dependencies
+**MCP tool errors**: Return error objects with `isError: true` (don't throw)
 
-**Main Project**:
+```typescript
+try {
+  // Tool implementation
+} catch (error) {
+  if (error instanceof Deno.errors.NotFound) {
+    return {
+      content: [{
+        type: "text",
+        text: JSON.stringify({ error: "File not found" }, null, 2),
+      }],
+    };
+  }
+  throw error; // Re-throw unexpected errors
+}
+```
 
-- Deno standard library (`@std/*`)
-- Cliffy CLI framework (`@cliffy/*`)
-- MCP SDK (`@modelcontextprotocol/sdk`)
-- LanceDB (`@lancedb/lancedb`)
-- Ollama embeddings (`ollama`)
+### Comments and Documentation
+
+- **File headers**: JSDoc comment at top of file
+- **Exported functions**: JSDoc with `@param` and `@returns`
+- **Inline comments**: For non-obvious logic only
+- **Constants**: Explain purpose and constraints
+
+```typescript
+/**
+ * Ollama embedding client using the official ollama package
+ *
+ * Recommended models:
+ * - nomic-embed-text (best for code/text, 768 dims)
+ * - all-minilm (lightweight, 384 dims)
+ */
+
+// Use nomic-embed-text as recommended for semantic search
+const EMBEDDING_MODEL = "nomic-embed-text:v1.5";
+```
+
+## CLI Development with Cliffy
+
+This project uses [Cliffy](https://cliffy.dev/) for the CLI. When adding
+commands:
+
+- Use `.command()` method to register subcommands
+- Use `.option()` for flags with type validation
+- Use `.action()` for command handlers
+- Provide `.example()` for usage examples
+- Use `EnumType` for restricted option values
+
+```typescript
+const modeType = new EnumType(["stdio", "http"]);
+
+await new Command()
+  .type("mode", modeType)
+  .option("--mode <mode:mode>", "Server mode", { default: "stdio" })
+  .option("--port <port:number>", "Port for HTTP", { default: 3000 })
+  .example("HTTP mode", "applesauce-mcp --mode http --port 8080")
+  .action(async ({ mode, port }) => {
+    await startServer({ mode, port });
+  })
+  .parse(Deno.args);
+```
+
+## Key Dependencies
+
+- **Deno standard library**: `@std/path`, `@std/fs`, `@std/crypto`
+- **Cliffy**: CLI framework (`@cliffy/command`, `@cliffy/flags`)
+- **MCP SDK**: `@modelcontextprotocol/sdk` (server, transports, types)
+- **LanceDB**: `@lancedb/lancedb` (vector database)
+- **Ollama**: `ollama` (embedding generation)
+- **LangChain**: `@langchain/*` (document loading, text splitting)
+- **Hono**: `hono` (HTTP server for MCP over HTTP)
+- **Zod**: `zod` (schema validation)

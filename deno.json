@@ -1,15 +1,9 @@
 {
   "tasks": {
-    "dev": "npx @modelcontextprotocol/inspector deno task start",
-    "cli": "deno run --allow-read --allow-write --allow-net --allow-env --allow-sys --allow-ffi src/cli.ts",
-    "ingest:docs": "deno run -A scripts/ingest-docs.ts",
-    "ingest:examples": "deno run -A scripts/ingest-examples.ts",
-    "start": "deno run --allow-read --allow-write --allow-net --allow-env --allow-sys --allow-ffi src/cli.ts",
-    "start:http": "deno run --allow-read --allow-write --allow-net --allow-env --allow-sys --allow-ffi src/cli.ts --http",
-    "check": "deno check src/cli.ts",
-    "submodule:init": "git submodule update --init --recursive",
-    "submodule:update": "git submodule update --remote --merge",
-    "submodule:sync": "git submodule sync"
+    "dev": "npx @modelcontextprotocol/inspector deno task cli",
+    "dev-http": "deno run --allow-read --allow-write --allow-net --allow-env --allow-sys --allow-ffi --allow-run --watch src/cli.ts --mode http",
+    "cli": "deno run --allow-read --allow-write --allow-net --allow-env --allow-sys --allow-ffi --allow-run src/cli.ts",
+    "check": "deno check src/cli.ts"
   },
   "imports": {
     "@cliffy/ansi": "jsr:@cliffy/ansi@^1.0.0-rc.8",
@@ -37,13 +31,5 @@
   "compilerOptions": {
     "lib": ["deno.ns", "deno.unstable", "dom"],
     "strict": true
-  },
-  "exclude": [
-    "reference/"
-  ],
-  "fmt": {
-    "exclude": [
-      "reference/"
-    ]
   }
 }

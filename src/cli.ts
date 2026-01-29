@@ -1,6 +1,8 @@
 #!/usr/bin/env -S deno run --allow-read --allow-write --allow-net --allow-env --allow-sys --allow-ffi
 import { Command, EnumType } from "@cliffy/command";
-import initCommand from "./commands/init.ts";
+import ingestCommand from "./commands/ingest.ts";
+import setupCommand from "./commands/setup.ts";
+import updateCommand from "./commands/update.ts";
 import { mcpCommand } from "./commands/mcp.ts";
 import { CompletionsCommand } from "@cliffy/command/completions";
 
@@ -19,7 +21,6 @@ await new Command().name("applesauce-mcp")
   )
   .action(
     async ({ mode, port }) => {
-      console.log("Starting MCP server in", mode);
       await mcpCommand({
         mode,
         port,
@@ -28,8 +29,18 @@ await new Command().name("applesauce-mcp")
   )
   // Register completions command
   .command("completions", new CompletionsCommand())
+  // setup command
+  .command(
+    "setup",
+    setupCommand,
+  )
+  // update command
+  .command(
+    "update",
+    updateCommand,
+  )
   // init command
   .command(
-    "init",
-    initCommand,
+    "ingest",
+    ingestCommand,
   ).parse(Deno.args);

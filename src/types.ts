@@ -34,12 +34,6 @@ export interface ExtractedMetadata {
   dependencies: string[];
 }
 
-/** Search parameters for examples */
-export interface SearchParams {
-  query: string;
-  limit?: number;
-}
-
 /**
  * Document chunk record stored in LanceDB
  */
@@ -63,53 +57,4 @@ export interface DocChunk {
  */
 export interface DocSearchResult extends DocChunk {
   _distance?: number; // Relevance score from vector search
-}
-
-/**
- * Text chunk (intermediate representation)
- */
-export interface TextChunk {
-  text: string;
-  index: number;
-}
-
-/**
- * Semantic chunker configuration
- */
-export interface ChunkerConfig {
-  hardThreshold: number; // Default: 0.6
-  initConst: number; // Default: 1.5
-  c: number; // Default: 0.9
-  minChunkLength: number; // Default: 50
-}
-
-/**
- * Doc search parameters
- */
-export interface DocSearchParams {
-  query: string;
-  limit?: number; // Default: 10
-}
-
-/**
- * Embedder interface for generating embeddings
- */
-export interface EmbedderInterface {
-  embed(text: string): Promise<number[]>;
-  embedBatch(texts: string[]): Promise<number[][]>;
-}
-
-/** Configuration file structure */
-export interface Config {
-  examplesFolder: string;
-  chunker: {
-    hardThreshold: number;
-    initConst: number;
-    c: number;
-    minChunkLength: number;
-  };
-  hybridSearch: {
-    weight: number; // Keyword boost factor
-    candidateMultiplier: number; // Fetch multiplier for reranking
-  };
 }

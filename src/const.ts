@@ -1,0 +1,26 @@
+/**
+ * Centralized configuration constants for Applesauce MCP
+ */
+
+/** Repository management */
+export const APPLESAUCE_REPO_URL = "https://github.com/hzrd149/applesauce";
+export const APPLESAUCE_LOCAL_PATH = "./data/applesauce";
+
+/** Documentation and examples paths */
+export const DOCS_ROOT = `${APPLESAUCE_LOCAL_PATH}/apps/docs`;
+export const EXAMPLES_ROOT =
+  `${APPLESAUCE_LOCAL_PATH}/apps/examples/src/examples`;
+
+/** Database configuration */
+export const DB_PATH = "./data";
+export const EMBEDDING_MODEL = "qwen3-embedding:8b";
+
+/** Ingestion configuration (docs only; examples are read from filesystem) */
+export const DOCS_CHUNK_SIZE = 1000;
+export const DOCS_CHUNK_OVERLAP = 200;
+export const EXAMPLES_CHUNK_SIZE = 2000;
+export const EXAMPLES_CHUNK_OVERLAP = 200;
+
+/** Database table names */
+export const DOCS_TABLE_NAME = "docs";
+export const EXAMPLES_TABLE_NAME = "examples";
