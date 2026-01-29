@@ -1,11 +1,13 @@
 import { Command } from "@cliffy/command";
 import { DirectoryLoader } from "@langchain/classic/document_loaders/fs/directory";
+import { LanceDB } from "@langchain/community/vectorstores/lancedb";
 import {
   MarkdownTextSplitter,
   RecursiveCharacterTextSplitter,
 } from "@langchain/textsplitters";
 import ollama from "ollama";
 import {
+  DB_PATH,
   DOCS_CHUNK_OVERLAP,
   DOCS_CHUNK_SIZE,
   DOCS_ROOT,
@@ -17,7 +19,7 @@ import {
   EXAMPLES_TABLE_NAME,
 } from "../const.ts";
 import { isApplesauceRepoValid } from "../lib/git.ts";
-import { getVectorStore } from "../lib/lancedb.ts";
+import { getEmbeddings } from "../lib/lancedb.ts";
 import { RelativeTextLoader } from "../loaders/text.ts";
 
 export async function ingestDocs(): Promise<void> {
@@ -27,14 +29,6 @@ export async function ingestDocs(): Promise<void> {
       "Applesauce repository not found. Please run 'applesauce-mcp setup' first.",
     );
     Deno.exit(1);
-  }
-
-  // Download the embedding model if it's not already downloaded
-  const models = await ollama.list();
-  if (!models.models.some((m) => m.name === EMBEDDING_MODEL)) {
-    console.log("Downloading embedding model...");
-    await ollama.pull({ model: EMBEDDING_MODEL });
-    console.log("Embedding model downloaded");
   }
 
   console.log("Reading docs...");
@@ -55,11 +49,13 @@ export async function ingestDocs(): Promise<void> {
   const splits = await splitter.splitDocuments(docs);
   console.log(`Split into ${splits.length} chunks`);
 
-  const store = await getVectorStore(DOCS_TABLE_NAME);
-
   // Add the documents to the table
   console.log("Adding doc chunks to table...");
-  await store.addDocuments(splits);
+  const embeddings = await getEmbeddings();
+  await LanceDB.fromDocuments(splits, embeddings, {
+    tableName: DOCS_TABLE_NAME,
+    uri: DB_PATH,
+  });
 }
 
 export async function ingestExamples(): Promise<void> {
@@ -103,11 +99,13 @@ export async function ingestExamples(): Promise<void> {
   const splits = await splitter.splitDocuments(docs);
   console.log(`Split into ${splits.length} chunks`);
 
-  const store = await getVectorStore(EXAMPLES_TABLE_NAME);
-
   // Add the documents to the table
   console.log("Adding example chunks to table...");
-  await store.addDocuments(splits);
+  const embeddings = await getEmbeddings();
+  await LanceDB.fromDocuments(splits, embeddings, {
+    tableName: EXAMPLES_TABLE_NAME,
+    uri: DB_PATH,
+  });
 }
 
 async function ingestAll(): Promise<void> {

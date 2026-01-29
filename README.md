@@ -1,237 +1,209 @@
 # Applesauce MCP Server
 
-An MCP (Model Context Protocol) server that provides semantic search over
-[Applesauce](https://github.com/coracle-social/applesauce) code examples and
-documentation using LanceDB vector database and Ollama embeddings.
+An MCP (Model Context Protocol) tool designed to help AI agents build Nostr applications using the [Applesauce SDK](https://github.com/hzrd149/applesauce). This tool provides AI agents with semantic search capabilities over Applesauce's documentation and code examples, enabling them to quickly find relevant information, understand API usage patterns, and write correct code with fewer mistakes.
+
+By integrating this MCP server into your AI-powered IDE or coding assistant, your agent gains instant access to comprehensive Applesauce documentation, real-world code examples, and best practices—all searchable through natural language queries. This significantly reduces hallucinations and helps agents produce working Nostr applications faster.
 
 ## Prerequisites
 
-1. **Ollama**: Must be running locally with the embedding model
+### For Using the Public HTTP Endpoint
+
+**No installation required!** Simply connect to `https://mcp.applesauce.build/mcp`
+
+### For Running Locally (JSR/Deno or Cloned Repository)
+
+1. **Ollama**: Must be running locally
    ```bash
    # Install Ollama from https://ollama.ai
-   # Then pull the embedding model:
+   # The MCP server will automatically attempt to download the embedding model
+   # Or you can manually download it:
    ollama pull nomic-embed-text:v1.5
    ```
 
 2. **Deno**: Install from https://deno.land
 
-## Installation
+## Adding to Your IDE or AI Assistant
 
-### Option 1: Quick Setup (Recommended)
+### OpenCode
 
-Clone and set up everything in one command:
+Add to `~/.config/opencode/opencode.json`:
 
-```bash
-git clone https://github.com/YOUR_USERNAME/applesauce-mcp.git
-cd applesauce-mcp
-deno task cli setup
-```
-
-This will:
-1. Clone the applesauce repository to `data/applesauce/`
-2. Ingest documentation and examples into the vector database
-3. Set up everything needed to run the MCP server
-
-### Option 2: Manual Setup
-
-```bash
-# 1. Clone this repository
-git clone https://github.com/YOUR_USERNAME/applesauce-mcp.git
-cd applesauce-mcp
-
-# 2. Clone the applesauce repository
-deno task cli setup
-
-# 3. Update applesauce repo (optional, if already cloned)
-deno task cli update
-
-# 4. Ingest documentation and examples
-deno task cli ingest
-```
-
-## Running the MCP Server
-
-### Stdio Mode (Default)
-
-For MCP clients that communicate via stdin/stdout:
-
-```bash
-deno task cli
-```
-
-### HTTP Mode
-
-For web clients or testing with HTTP/SSE:
-
-```bash
-deno task cli -- --mode http --port 3000
-```
-
-Endpoints available:
-- `GET /sse` - Server-Sent Events endpoint
-- `POST /message` - Send JSON-RPC messages
-- `GET /health` - Health check
-
-### Development Mode
-
-Run with MCP Inspector for debugging:
-
-```bash
-deno task dev
-```
-
-## MCP Tools
-
-The server exposes 6 tools for searching and retrieving Applesauce documentation
-and examples:
-
-### Documentation Tools
-
-#### 1. `search_docs`
-
-Search Applesauce documentation using semantic vector search.
-
-**Parameters:**
-- `query` (required): Search query (e.g., "How do I use EventStore?")
-- `limit` (optional): Max results, 1-20 (default: 5)
-
-**Returns:** Formatted markdown with relevant documentation chunks
-
-#### 2. `list_docs`
-
-List all available documentation files with their paths and descriptions.
-
-**Parameters:** None
-
-**Returns:** Array of documentation files with metadata
-
-#### 3. `read_docs`
-
-Read full content of a specific documentation file.
-
-**Parameters:**
-- `path` (required): Documentation file path (e.g., "core/EventStore.md")
-
-**Returns:** Complete documentation file content
-
-### Example Code Tools
-
-#### 4. `search_examples`
-
-Search example code files using semantic vector search.
-
-**Parameters:**
-- `query` (required): Search query (e.g., "async profile loading")
-- `limit` (optional): Max results, 1-20 (default: 5)
-
-**Returns:**
-```json
-[
-  {
-    "name": "casting/threads",
-    "description": "Example showing how to work with threads",
-    "category": "casting"
-  }
-]
-```
-
-#### 5. `list_examples`
-
-List all available example files.
-
-**Parameters:** None
-
-**Returns:** Array of example files with names and descriptions
-
-#### 6. `read_example`
-
-Read full code and metadata for a specific example.
-
-**Parameters:**
-- `name` (required): Example name (path without extension, e.g., "casting/threads")
-
-**Returns:**
+**Using Public HTTP Endpoint (Easiest)**
 ```json
 {
-  "name": "casting/threads",
-  "description": "Example showing how to work with threads",
-  "category": "casting",
-  "filePath": "casting/threads.tsx",
-  "code": "// Full example code...",
-  "imports": [...],
-  "exports": [...],
-  "functions": [...],
-  "dependencies": [...]
-}
-```
-
-## Configuration
-
-### Updating the Repository
-
-Keep the applesauce repository up to date:
-
-```bash
-deno task cli update
-```
-
-### Re-ingesting Data
-
-After updating the repository or when documentation/examples change:
-
-```bash
-# Ingest everything
-deno task cli ingest
-
-# Ingest only documentation
-deno task cli ingest -- --docs-only
-
-# Ingest only examples
-deno task cli ingest -- --examples-only
-```
-
-## Using with MCP Clients
-
-Add to your MCP client configuration (e.g., Claude Desktop):
-
-```json
-{
-  "mcpServers": {
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
     "applesauce": {
-      "command": "deno",
-      "args": [
-        "run",
-        "--allow-read",
-        "--allow-write",
-        "--allow-net",
-        "--allow-env",
-        "--allow-sys",
-        "--allow-ffi",
-        "--allow-run",
-        "/path/to/applesauce-mcp/src/cli.ts"
-      ]
+      "type": "remote",
+      "url": "https://mcp.applesauce.build/mcp"
     }
   }
 }
 ```
 
-## Example Workflow
+**Using JSR with Deno**
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "applesauce": {
+      "type": "local",
+      "command": ["deno", "run", "-P", "jsr:@applesauce/mcp"]
+    }
+  }
+}
+```
+
+[Learn more about MCP in OpenCode](https://opencode.ai/docs/mcp-servers/)
+
+### Cursor
+
+Add to `.cursor/mcp.json` (project) or `~/.cursor/mcp.json` (global):
+
+[![Install MCP Server](https://cursor.com/deeplink/mcp-install-dark.svg)](https://cursor.com/en-US/install-mcp?name=postgres&config=eyJjb21tYW5kIjoiZGVubyBydW4gLVAganNyOkBhcHBsZXNhdWNlL21jcCJ9)
+
+**Using Public HTTP Endpoint (Easiest)**
+```json
+{
+  "mcpServers": {
+    "applesauce": {
+      "url": "https://mcp.applesauce.build/mcp"
+    }
+  }
+}
+```
+
+**Using JSR with Deno**
+```json
+{
+  "mcpServers": {
+    "applesauce": {
+      "command": "deno",
+      "args": ["run", "-P", "jsr:@applesauce/mcp"]
+    }
+  }
+}
+```
+
+[Learn more about MCP in Cursor](https://cursor.com/docs/context/mcp)
+
+### Other MCP-Compatible IDEs
+
+For Claude Desktop, Cline, and other MCP-compatible tools, use this configuration format:
+
+**Using Public HTTP Endpoint**
+```json
+{
+  "mcpServers": {
+    "applesauce": {
+      "url": "https://mcp.applesauce.build/mcp"
+    }
+  }
+}
+```
+
+**Using JSR with Deno**
+```json
+{
+  "mcpServers": {
+    "applesauce": {
+      "command": "deno",
+      "args": ["run", "-P", "jsr:@applesauce/mcp"]
+    }
+  }
+}
+```
+
+Refer to your specific IDE's MCP configuration documentation for the exact file location.
+
+## Available MCP Tools
+
+Once configured, your AI agent will have access to these 6 tools:
+
+### Documentation Tools
+
+**`search_docs`** - Semantically search Applesauce documentation using natural language queries. Use this when you need to understand how a specific API works, find usage patterns, or learn about Applesauce concepts.
+- `query` (string, required): Natural language search query
+- `limit` (number, optional): Max results, 1-20 (default: 5)
+
+**`list_docs`** - List all available documentation files. Use this to explore what documentation is available or to find the exact path of a documentation file.
+
+**`read_docs`** - Read the full content of a specific documentation file. Use this after finding a relevant file through search or list to get complete details.
+- `path` (string, required): Documentation file path (e.g., "core/EventStore.md")
+
+### Example Code Tools
+
+**`search_examples`** - Semantically search code examples using natural language queries. Use this to find real-world code showing how to implement specific features or use specific APIs.
+- `query` (string, required): Natural language search query
+- `limit` (number, optional): Max results, 1-20 (default: 5)
+
+**`list_examples`** - List all available code examples. Use this to explore what examples are available.
+
+**`read_example`** - Read the full source code and metadata for a specific example. Use this to get the complete implementation details after finding a relevant example.
+- `name` (string, required): Example name without extension (e.g., "casting/threads")
+- Returns: Full source code, imports, exports, functions, and dependencies
+
+## How AI Agents Should Use These Tools
+
+**Recommended workflow:**
+
+1. **Search first** - Use `search_docs` or `search_examples` to find relevant information
+2. **Read details** - Use `read_docs` or `read_example` to get the full content of relevant files
+3. **Write code** - Use the information to write correct, working code
+
+**Example scenario:**
+
+**User:** "I need to create a Nostr event store that subscribes to relays"
+
+**Agent workflow:**
+1. `search_docs` with query: "EventStore relay subscription"
+2. `read_docs` with path from search results
+3. `search_examples` with query: "relay subscription event handling"
+4. `read_example` with name from search results
+5. Write the implementation using the documentation and example code as reference
+
+This approach ensures the agent has accurate, up-to-date information about the Applesauce SDK before writing code.
+
+## Running Locally
+
+Most users will use the public HTTP endpoint (`https://mcp.applesauce.build/mcp`) or run via JSR/Deno. However, if you want to run the server locally:
+
+### Setup and Run
 
 ```bash
-# 1. Initial setup
-deno task cli setup
+# Clone the repository
+git clone https://github.com/hzrd149/applesauce-mcp.git
+cd applesauce-mcp
 
-# 2. Start the MCP server
+# Run the server (first run will automatically setup the database)
 deno task cli
 
-# 3. In your MCP client, you can now:
-#    - Search docs: "How do I use RelayPool?"
-#    - Search examples: "Show me thread examples"
-#    - Read specific files: read_example("casting/threads")
+# Or run in HTTP mode
+deno task cli -- --mode http --port 3000
+```
 
-# 4. Keep it updated
+The first time you run the server, it will automatically:
+1. Clone the Applesauce repository to `data/applesauce/`
+2. Extract and index all documentation and code examples
+3. Generate embeddings for semantic search using Ollama
+
+### Updating Data
+
+To get the latest Applesauce documentation and examples:
+
+```bash
+# Update the repository
 deno task cli update
+
+# Re-index the data
 deno task cli ingest
+```
+
+Or if running via JSR:
+
+```bash
+deno run -P jsr:@applesauce/mcp update
+deno run -P jsr:@applesauce/mcp ingest
 ```
 
 ## License

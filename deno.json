@@ -1,12 +1,12 @@
 {
   "name": "@applesauce/mcp",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "license": "MIT",
   "exports": "./mod.ts",
   "tasks": {
     "dev": "npx @modelcontextprotocol/inspector deno task cli",
-    "dev-http": "deno run --allow-read --allow-write --allow-net --allow-env --allow-sys --allow-ffi --allow-run --watch src/cli.ts --mode http",
-    "cli": "deno run --allow-read --allow-write --allow-net --allow-env --allow-sys --allow-ffi --allow-run src/cli.ts",
+    "dev-http": "deno run -P --watch src/cli.ts --mode http",
+    "cli": "deno run -P src/cli.ts",
     "check": "deno check src/cli.ts"
   },
   "imports": {
@@ -30,6 +30,7 @@
     "hono": "npm:hono@^4.11.7",
     "langchain": "npm:langchain@^1.2.14",
     "ollama": "npm:ollama@^0.6.3",
+    "typescript": "npm:typescript@^5.8.3",
     "zod": "npm:zod@^3.25.1"
   },
   "compilerOptions": {
@@ -39,5 +40,15 @@
   "exclude": [
     "data",
     ".vscode"
-  ]
+  ],
+  "permissions": {
+    "default": {
+      "sys": true,
+      "env": true,
+      "read": true,
+      "ffi": true,
+      "net": true,
+      "run": true
+    }
+  }
 }

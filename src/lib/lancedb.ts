@@ -37,8 +37,17 @@ export async function getTable(name: string): Promise<lancedb.Table> {
 
 let embeddingsInstance: OllamaEmbeddings | null = null;
 
-function getEmbeddings(): OllamaEmbeddings {
+/** Get the embeddings instance and ensure the model is downloaded */
+export async function getEmbeddings(): Promise<OllamaEmbeddings> {
   if (!embeddingsInstance) {
+    // Download the embedding model if it's not already downloaded
+    const models = await ollama.list();
+    if (!models.models.some((m) => m.name === EMBEDDING_MODEL)) {
+      console.log("Downloading embedding model...");
+      await ollama.pull({ model: EMBEDDING_MODEL });
+      console.log("Embedding model downloaded");
+    }
+
     embeddingsInstance = new OllamaEmbeddings({ model: EMBEDDING_MODEL });
   }
   return embeddingsInstance;
@@ -46,7 +55,7 @@ function getEmbeddings(): OllamaEmbeddings {
 
 /** Get a LangChain vector store for a table (embeds queries internally) */
 export async function getVectorStore(name: string) {
-  const embeddings = getEmbeddings();
+  const embeddings = await getEmbeddings();
   const table = await getTable(name);
 
   return new LanceDB(embeddings, {

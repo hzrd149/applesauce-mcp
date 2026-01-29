@@ -1,4 +1,4 @@
-#!/usr/bin/env -S deno run --allow-read --allow-write --allow-net --allow-env --allow-sys --allow-ffi
+#!/usr/bin/env -S deno run --allow-read --allow-write --allow-net --allow-sys --allow-ffi --allow-run --allow-env
 import { Command, EnumType } from "@cliffy/command";
 import ingestCommand from "./commands/ingest.ts";
 import setupCommand from "./commands/setup.ts";

@@ -98,7 +98,7 @@ export default function createApplesauceMCPServer(): Server {
 
     const resources: Resource[] = allExamples.map((example) => ({
       uri: `applesauce://example/${example.name}`,
-      name: example.name,
+      name: `example/${example.name}`,
       description: example.description || `Example: ${example.name}`,
       mimeType: "application/x-typescript",
     }));

@@ -7,9 +7,10 @@ import { cloneApplesauceRepo, isApplesauceRepoValid } from "../lib/git.ts";
 import { ingestDocs, ingestExamples } from "./ingest.ts";
 
 /**
- * Main setup function that clones repo and runs ingestion
+ * Main setup function that clones repo and runs ingestion.
+ * Exported for use by the MCP command when repo is not set up.
  */
-async function setup(): Promise<void> {
+export async function runSetup(): Promise<void> {
   console.log("Setting up Applesauce MCP...\n");
 
   // Step 1: Check if repo already exists
@@ -36,4 +37,4 @@ async function setup(): Promise<void> {
 
 export default new Command()
   .description("Set up the applesauce repository and ingest docs + examples")
-  .action(setup);
+  .action(runSetup);

@@ -2,9 +2,10 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
-import { initDocsDatabase, setHybridSearchConfig } from "../lib/lancedb.ts";
+import { isApplesauceRepoValid } from "../lib/git.ts";
 import * as logger from "../lib/logger.ts";
 import createApplesauceMCPServer from "../mcp/server.ts";
+import { runSetup } from "./setup.ts";
 
 export interface MCPCommandOptions {
   mode?: "stdio" | "http";
@@ -23,11 +24,11 @@ export async function mcpCommand(
   // Set silent mode for stdio to prevent corrupting MCP protocol
   logger.setSilentMode(mode === "stdio");
 
-  // Initialize databases
-  await initDocsDatabase();
-
-  // Configure hybrid search (weight: 0.6, candidateMultiplier: 2)
-  setHybridSearchConfig(0.6, 2);
+  // Ensure repo is set up; run setup if not (or exit in stdio to avoid corrupting protocol)
+  if (!await isApplesauceRepoValid()) {
+    logger.warn("Repository not set up. Running setup...");
+    await runSetup();
+  }
 
   // Create MCP server
   const server = createApplesauceMCPServer();
