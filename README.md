@@ -180,13 +180,15 @@ relevant example.
 
 ## Configuring Embeddings Provider
 
-The MCP server supports multiple embeddings providers for semantic search. You can configure the provider using environment variables.
+The MCP server supports multiple embeddings providers for semantic search. You
+can configure the provider using environment variables.
 
 ### Supported Providers
 
 #### Ollama (Default)
 
-No configuration needed - the server uses Ollama by default with the `qwen3-embedding:4b` model.
+No configuration needed - the server uses Ollama by default with the
+`qwen3-embedding:4b` model.
 
 **Custom Ollama Configuration:**
 
@@ -209,7 +211,8 @@ export OPENAI_API_KEY=sk-your-api-key-here
 
 #### OpenAI-Compatible Providers
 
-The server works with any OpenAI-compatible API (OpenRouter, Together.ai, Fireworks AI, etc.):
+The server works with any OpenAI-compatible API (OpenRouter, Together.ai,
+Fireworks AI, etc.):
 
 ```bash
 export EMBEDDING_PROVIDER=openai
@@ -220,15 +223,16 @@ export OPENAI_BASE_URL=https://openrouter.ai/api/v1
 
 ### Environment Variables
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `EMBEDDING_PROVIDER` | Provider type (`ollama` or `openai`) | `ollama` |
-| `EMBEDDING_MODEL` | Model name to use | `qwen3-embedding:4b` |
-| `OLLAMA_HOST` | Ollama server URL (when using Ollama) | `http://localhost:11434` |
-| `OPENAI_API_KEY` | API key for OpenAI-compatible providers | (required for OpenAI) |
-| `OPENAI_BASE_URL` | Base URL for OpenAI-compatible APIs | `https://api.openai.com/v1` |
+| Variable             | Description                             | Default                     |
+| -------------------- | --------------------------------------- | --------------------------- |
+| `EMBEDDING_PROVIDER` | Provider type (`ollama` or `openai`)    | `ollama`                    |
+| `EMBEDDING_MODEL`    | Model name to use                       | `qwen3-embedding:4b`        |
+| `OLLAMA_HOST`        | Ollama server URL (when using Ollama)   | `http://localhost:11434`    |
+| `OPENAI_API_KEY`     | API key for OpenAI-compatible providers | (required for OpenAI)       |
+| `OPENAI_BASE_URL`    | Base URL for OpenAI-compatible APIs     | `https://api.openai.com/v1` |
 
-**Note:** When switching providers, you'll need to re-run `deno task cli ingest` to regenerate embeddings with the new provider.
+**Note:** When switching providers, you'll need to re-run `deno task cli ingest`
+to regenerate embeddings with the new provider.
 
 ## Running Locally
 
@@ -277,7 +281,8 @@ deno run -P jsr:@applesauce/mcp ingest
 
 ## Running with Docker
 
-The server includes Docker and Docker Compose configurations for easy deployment.
+The server includes Docker and Docker Compose configurations for easy
+deployment.
 
 ### Using Docker Compose (Recommended)
 
