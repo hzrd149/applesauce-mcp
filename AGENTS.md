@@ -21,7 +21,7 @@ applesauce-mcp/              # Main Deno project
 │   ├── commands/            # Command implementations
 │   │   ├── setup.ts         # Clone applesauce repo
 │   │   ├── update.ts        # Update applesauce repo
-│   │   ├── ingest.ts          # Ingest examples and docs
+│   │   ├── rebuild.ts       # Rebuild examples and docs databases
 │   │   └── mcp.ts           # MCP server (stdio/HTTP)
 │   ├── lib/                 # Core libraries
 │   │   ├── lancedb.ts       # LanceDB service (connection, embeddings, examples, docs, hybrid search)
@@ -40,8 +40,9 @@ applesauce-mcp/              # Main Deno project
 ```bash
 # Setup and initialization
 deno task cli setup        # Clone applesauce repo to data/applesauce
-deno task cli update       # Pull latest changes from applesauce repo
-deno task cli ingest       # Ingest documentation and examples into the local database
+deno task cli update       # Pull latest changes and automatically rebuild databases
+deno task cli update --skip-rebuild  # Update without rebuilding
+deno task cli rebuild      # Manually rebuild documentation and examples databases from scratch
 
 # Running the MCP server
 deno task dev              # Run MCP server with MCP Inspector

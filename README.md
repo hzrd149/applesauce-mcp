@@ -231,7 +231,7 @@ export OPENAI_BASE_URL=https://openrouter.ai/api/v1
 | `OPENAI_API_KEY`     | API key for OpenAI-compatible providers | (required for OpenAI)       |
 | `OPENAI_BASE_URL`    | Base URL for OpenAI-compatible APIs     | `https://api.openai.com/v1` |
 
-**Note:** When switching providers, you'll need to re-run `deno task cli ingest`
+**Note:** When switching providers, you'll need to re-run `deno task cli rebuild`
 to regenerate embeddings with the new provider.
 
 ## Running Locally
@@ -265,18 +265,21 @@ The first time you run the server, it will automatically:
 To get the latest Applesauce documentation and examples:
 
 ```bash
-# Update the repository
+# Update the repository and automatically rebuild databases
 deno task cli update
 
-# Re-index the data
-deno task cli ingest
+# Or update without rebuilding (if you want to rebuild manually later)
+deno task cli update --skip-rebuild
 ```
 
 Or if running via JSR:
 
 ```bash
+# Update and rebuild automatically
 deno run -P jsr:@applesauce/mcp update
-deno run -P jsr:@applesauce/mcp ingest
+
+# Or skip automatic rebuild
+deno run -P jsr:@applesauce/mcp update --skip-rebuild
 ```
 
 ## Running with Docker

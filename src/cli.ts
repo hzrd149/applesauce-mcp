@@ -1,7 +1,7 @@
 #!/usr/bin/env -S deno run --allow-read --allow-write --allow-net --allow-sys --allow-ffi --allow-run --allow-env
 import { Command, EnumType } from "@cliffy/command";
 import debugCommand from "./commands/debug.ts";
-import ingestCommand from "./commands/ingest.ts";
+import rebuildCommand from "./commands/rebuild.ts";
 import setupCommand from "./commands/setup.ts";
 import updateCommand from "./commands/update.ts";
 import { mcpCommand } from "./commands/mcp.ts";
@@ -40,10 +40,10 @@ await new Command().name("applesauce-mcp")
     "update",
     updateCommand,
   )
-  // ingest command
+  // rebuild command
   .command(
-    "ingest",
-    ingestCommand,
+    "rebuild",
+    rebuildCommand,
   )
   // debug command
   .command(

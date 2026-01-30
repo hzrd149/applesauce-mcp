@@ -1,6 +1,6 @@
 FROM denoland/deno:2.6.7
 
-# Install git for cloning applesauce repo (setup/ingest)
+# Install git for cloning applesauce repo (setup/rebuild)
 RUN apt-get update && apt-get install -y --no-install-recommends git ca-certificates \
   && rm -rf /var/lib/apt/lists/*
 
@@ -21,14 +21,6 @@ COPY . .
 
 # Create data directory for LanceDB
 RUN mkdir -p /app/data
-
-# Environment variables for embeddings configuration
-# These can be overridden at runtime with docker run -e
-ENV EMBEDDING_PROVIDER=ollama
-ENV EMBEDDING_MODEL=qwen3-embedding:4b
-ENV OLLAMA_HOST=http://host.docker.internal:11434
-ENV OPENAI_API_KEY=""
-ENV OPENAI_BASE_URL=https://api.openai.com/v1
 
 # Set custom applesauce repo path (pre-cloned at build time)
 ENV APPLESAUCE_REPO_PATH=/opt/applesauce

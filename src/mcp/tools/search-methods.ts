@@ -73,7 +73,7 @@ export async function handleSearchMethods(
     );
     lines.push("- Describing the functionality you need");
     lines.push(
-      "- Checking if the methods have been ingested with `ingest methods`",
+      "- Checking if the methods have been rebuilt with `rebuild methods`",
     );
   }
 

@@ -8,11 +8,15 @@ import {
   isApplesauceRepoValid,
   updateApplesauceRepo,
 } from "../lib/git.ts";
+import { rebuildDocs, rebuildExamples, rebuildMethods } from "./rebuild.ts";
 
 /**
  * Update the applesauce repository
  */
-async function update(options: { tag?: string }): Promise<void> {
+async function update(options: {
+  tag?: string;
+  skipRebuild?: boolean;
+}): Promise<void> {
   // Verify repo exists
   const repoExists = await isApplesauceRepoValid();
   if (!repoExists) {
@@ -22,12 +26,16 @@ async function update(options: { tag?: string }): Promise<void> {
     Deno.exit(1);
   }
 
+  let updateSuccessful = false;
+
   if (options.tag) {
     console.log(`Checking out tag: ${options.tag}`);
     const result = await checkoutApplesauceTag(options.tag);
     console.log(result.message);
     if (!result.success) {
       console.log("Note: Continuing despite git error");
+    } else {
+      updateSuccessful = true;
     }
   } else {
     console.log("Updating to latest version...");
@@ -35,15 +43,43 @@ async function update(options: { tag?: string }): Promise<void> {
     console.log(result.message);
     if (!result.success) {
       console.log("Note: Continuing despite git error");
+    } else {
+      updateSuccessful = true;
     }
   }
 
-  console.log(
-    "\nTip: Run 'applesauce-mcp init' to re-ingest the updated content.",
-  );
+  // Automatically rebuild databases after successful update
+  if (updateSuccessful && !options.skipRebuild) {
+    console.log(
+      "\nRebuilding databases with updated content...\n",
+    );
+    try {
+      await rebuildDocs();
+      await rebuildExamples();
+      await rebuildMethods();
+      console.log("\n✓ Databases rebuilt successfully");
+    } catch (error) {
+      console.error(
+        "\n⚠ Failed to rebuild databases:",
+        error instanceof Error ? error.message : error,
+      );
+      console.log("You can manually rebuild later with: applesauce-mcp rebuild");
+      Deno.exit(1);
+    }
+  } else if (updateSuccessful && options.skipRebuild) {
+    console.log(
+      "\nSkipped database rebuild. Run 'applesauce-mcp rebuild' to update the databases.",
+    );
+  }
 }
 
 export default new Command()
-  .description("Update the applesauce repository")
+  .description(
+    "Update the applesauce repository and rebuild databases",
+  )
   .option("--tag <tag:string>", "Checkout a specific tag or branch")
+  .option(
+    "--skip-rebuild",
+    "Skip automatic database rebuild after update",
+  )
   .action(update);

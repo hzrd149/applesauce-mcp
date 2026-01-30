@@ -37,7 +37,7 @@ docker compose down
 On the first startup, the MCP container will:
 
 1. Clone the applesauce repository (`setup` command)
-2. Ingest documentation and examples (`ingest` command)
+2. Rebuild documentation and examples databases (`rebuild` command)
 3. Download the embedding model from Ollama (`qwen3-embedding:4b`)
 4. Start the MCP HTTP server on port 3000
 

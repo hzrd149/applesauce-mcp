@@ -21,7 +21,7 @@ import {
   METHODS_TABLE_NAME,
 } from "../const.ts";
 import { isApplesauceRepoValid } from "../lib/git.ts";
-import { getEmbeddings } from "../lib/lancedb.ts";
+import { getDatabase, getEmbeddings } from "../lib/lancedb.ts";
 import {
   getAllTypeScriptFiles,
   mapSourceToExportPath,
@@ -30,7 +30,28 @@ import {
 } from "../lib/ts-parser.ts";
 import { RelativeTextLoader } from "../loaders/text.ts";
 
-export async function ingestDocs(): Promise<void> {
+/**
+ * Delete a database table if it exists
+ * @param tableName - Name of the table to delete
+ */
+async function deleteTableIfExists(tableName: string): Promise<void> {
+  try {
+    const db = await getDatabase();
+    const tableNames = await db.tableNames();
+    
+    if (tableNames.includes(tableName)) {
+      await db.dropTable(tableName);
+      console.log(`✓ Deleted existing table: ${tableName}`);
+    } else {
+      console.log(`ℹ Table "${tableName}" does not exist, skipping deletion`);
+    }
+  } catch (error) {
+    console.error(`⚠ Failed to delete table ${tableName}:`, error);
+    throw error;
+  }
+}
+
+export async function rebuildDocs(): Promise<void> {
   // Verify repository exists
   if (!await isApplesauceRepoValid()) {
     console.error(
@@ -38,6 +59,10 @@ export async function ingestDocs(): Promise<void> {
     );
     Deno.exit(1);
   }
+
+  // Delete existing docs table to prevent duplication
+  console.log("Deleting existing docs database...");
+  await deleteTableIfExists(DOCS_TABLE_NAME);
 
   console.log("Reading docs...");
   // Load all .md files from folder recursively
@@ -66,7 +91,7 @@ export async function ingestDocs(): Promise<void> {
   });
 }
 
-export async function ingestExamples(): Promise<void> {
+export async function rebuildExamples(): Promise<void> {
   // Verify repository exists
   if (!await isApplesauceRepoValid()) {
     console.error(
@@ -75,7 +100,11 @@ export async function ingestExamples(): Promise<void> {
     Deno.exit(1);
   }
 
-  console.log("Ingesting examples...");
+  // Delete existing examples table to prevent duplication
+  console.log("Deleting existing examples database...");
+  await deleteTableIfExists(EXAMPLES_TABLE_NAME);
+
+  console.log("Rebuilding examples...");
   // Load all .ts/.tsx files from folder recursively
   const loader = new DirectoryLoader(EXAMPLES_ROOT, {
     ".tsx": (filePath: string) =>
@@ -108,7 +137,7 @@ export async function ingestExamples(): Promise<void> {
   });
 }
 
-export async function ingestMethods(): Promise<void> {
+export async function rebuildMethods(): Promise<void> {
   // Verify repository exists
   if (!await isApplesauceRepoValid()) {
     console.error(
@@ -116,6 +145,10 @@ export async function ingestMethods(): Promise<void> {
     );
     Deno.exit(1);
   }
+
+  // Delete existing methods table to prevent duplication
+  console.log("Deleting existing methods database...");
+  await deleteTableIfExists(METHODS_TABLE_NAME);
 
   console.log("Discovering applesauce packages...");
   const packagesDir = join(APPLESAUCE_LOCAL_PATH, "packages");
@@ -228,28 +261,28 @@ export async function ingestMethods(): Promise<void> {
     uri: DB_PATH,
   });
 
-  console.log(`✓ Successfully ingested ${allDocuments.length} methods`);
+  console.log(`✓ Successfully rebuilt ${allDocuments.length} methods`);
 }
 
-async function ingestAll(): Promise<void> {
-  await ingestDocs();
-  await ingestExamples();
-  await ingestMethods();
+async function rebuildAll(): Promise<void> {
+  await rebuildDocs();
+  await rebuildExamples();
+  await rebuildMethods();
 }
 
 export default new Command().description(
-  "Ingest the documentation, examples, and methods into the local database",
+  "Rebuild the documentation, examples, and methods databases from scratch (deletes existing data)",
 ).action(
-  ingestAll,
+  rebuildAll,
 ).command(
   "docs",
-  "Ingest documentation into the local database",
-).action(ingestDocs).command(
+  "Rebuild documentation database from scratch",
+).action(rebuildDocs).command(
   "examples",
-  "Ingest examples into the local database",
-).action(ingestExamples).command(
+  "Rebuild examples database from scratch",
+).action(rebuildExamples).command(
   "methods",
-  "Ingest exported methods from applesauce packages",
+  "Rebuild exported methods database from scratch",
 ).action(
-  ingestMethods,
+  rebuildMethods,
 );
