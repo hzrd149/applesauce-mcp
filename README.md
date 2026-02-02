@@ -72,7 +72,7 @@ Add to `~/.config/opencode/opencode.json`:
 
 Add to `.cursor/mcp.json` (project) or `~/.cursor/mcp.json` (global):
 
-[![Install MCP Server](https://cursor.com/deeplink/mcp-install-dark.svg)](https://cursor.com/en-US/install-mcp?name=postgres&config=eyJjb21tYW5kIjoiZGVubyBydW4gLVAganNyOkBhcHBsZXNhdWNlL21jcCJ9)
+[![Install MCP Server](https://cursor.com/deeplink/mcp-install-dark.svg)](https://cursor.com/en-US/install-mcp?name=applesauce&config=eyJ1cmwiOiJodHRwczovL21jcC5hcHBsZXNhdWNlLmJ1aWxkL21jcCJ9)
 
 **Using Public HTTP Endpoint (Easiest)**
 
