@@ -81,34 +81,3 @@ export function parseMetadata(source: string): {
     return { metadata: null, code: source };
   }
 }
-
-/**
- * Create a searchable text representation from metadata
- * This will be used as the pageContent for embeddings
- */
-export function metadataToSearchableText(
-  metadata: ExampleMetadata,
-  filePath: string,
-): string {
-  const parts: string[] = [];
-
-  // Add description
-  if (metadata.description) {
-    parts.push(`Description: ${metadata.description}`);
-  }
-
-  // Add tags
-  if (metadata.tags && metadata.tags.length > 0) {
-    parts.push(`Tags: ${metadata.tags.join(", ")}`);
-  }
-
-  // Add related examples
-  if (metadata.related && metadata.related.length > 0) {
-    parts.push(`Related: ${metadata.related.join(", ")}`);
-  }
-
-  // Add file path for context
-  parts.push(`Path: ${filePath}`);
-
-  return parts.join("\n");
-}

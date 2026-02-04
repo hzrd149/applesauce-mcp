@@ -2,9 +2,7 @@ import { Command } from "@cliffy/command";
 import { DirectoryLoader } from "@langchain/classic/document_loaders/fs/directory";
 import { LanceDB } from "@langchain/community/vectorstores/lancedb";
 import { Document } from "@langchain/core/documents";
-import {
-  MarkdownTextSplitter
-} from "@langchain/textsplitters";
+import { MarkdownTextSplitter } from "@langchain/textsplitters";
 import { join } from "@std/path";
 import {
   APPLESAUCE_LOCAL_PATH,
@@ -15,7 +13,7 @@ import {
   DOCS_TABLE_NAME,
   EXAMPLES_ROOT,
   EXAMPLES_TABLE_NAME,
-  METHODS_TABLE_NAME
+  METHODS_TABLE_NAME,
 } from "../const.ts";
 import { isApplesauceRepoValid } from "../lib/git.ts";
 import { getDatabase, getEmbeddings } from "../lib/lancedb.ts";
@@ -106,10 +104,8 @@ export async function rebuildExamples(): Promise<void> {
   // Load all .ts/.tsx files from folder recursively using ExampleLoader
   // This extracts front matter metadata instead of embedding the full code
   const loader = new DirectoryLoader(EXAMPLES_ROOT, {
-    ".tsx": (filePath: string) =>
-      new ExampleLoader(filePath, EXAMPLES_ROOT),
-    ".ts": (filePath: string) =>
-      new ExampleLoader(filePath, EXAMPLES_ROOT),
+    ".tsx": (filePath: string) => new ExampleLoader(filePath, EXAMPLES_ROOT),
+    ".ts": (filePath: string) => new ExampleLoader(filePath, EXAMPLES_ROOT),
   }, true);
 
   const docs = await loader.load();

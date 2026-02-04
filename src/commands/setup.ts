@@ -37,5 +37,7 @@ export async function runSetup(): Promise<void> {
 }
 
 export default new Command()
-  .description("Set up the applesauce repository and build docs + examples databases")
+  .description(
+    "Set up the applesauce repository and build docs + examples databases",
+  )
   .action(runSetup);

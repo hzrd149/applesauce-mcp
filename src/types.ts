@@ -15,7 +15,6 @@ export interface ExampleRecord {
   extension: string; // File extension
 
   // Context metadata
-  category: string; // Example category (extracted from path)
   filePath: string; // Relative file path from examples root
   absolutePath: string; // Absolute file path
 

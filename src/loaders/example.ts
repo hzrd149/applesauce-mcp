@@ -6,10 +6,7 @@
 import { BaseDocumentLoader } from "@langchain/core/document_loaders/base";
 import { Document } from "@langchain/core/documents";
 import path from "node:path";
-import {
-  metadataToSearchableText,
-  parseMetadata,
-} from "../lib/jsdoc-metadata.ts";
+import { parseMetadata } from "../lib/jsdoc-metadata.ts";
 
 /**
  * Loads TypeScript example files and extracts JSDoc metadata
@@ -38,17 +35,15 @@ export class ExampleLoader extends BaseDocumentLoader {
     const { metadata } = parseMetadata(content);
     const hasMetadata = metadata !== null;
 
-    // Convert metadata to searchable text (this is what gets embedded)
-    const searchableText = metadataToSearchableText(
-      metadata || {},
-      relativePath,
-    );
+    if (!metadata?.description) {
+      throw new Error("No description found in JSDoc metadata");
+    }
 
     // Create document with metadata as the page content
     // The actual code is NOT included in the embedding
     const doc = new Document({
       id: relativePath,
-      pageContent: searchableText,
+      pageContent: metadata.description,
       metadata: {
         source: relativePath,
         description: metadata?.description || "",

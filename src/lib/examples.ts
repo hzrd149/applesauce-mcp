@@ -8,7 +8,6 @@ import { walk } from "@std/fs/walk";
 import { relative } from "@std/path";
 import { EXAMPLES_ROOT } from "../const.ts";
 import { isApplesauceRepoValid } from "./git.ts";
-import { extractPathMetadata } from "./metadata.ts";
 import { parseMetadata } from "./jsdoc-metadata.ts";
 
 /** Minimal example info for listing (e.g. MCP resources) */
@@ -51,7 +50,7 @@ export async function listExamples(): Promise<ExampleInfo[]> {
     if (!entry.path || !entry.isFile) continue;
 
     const relativePath = relative(EXAMPLES_ROOT, entry.path);
-    const { name } = extractPathMetadata(relativePath);
+    const name = relativePath.replace(/\.[^.]+$/, "");
 
     let description: string | undefined;
     try {
