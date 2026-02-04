@@ -2,15 +2,17 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
-import { isApplesauceRepoValid } from "../lib/git.ts";
+import { isApplesauceRepoValid, updateApplesauceRepo } from "../lib/git.ts";
 import { areAllTablesIngested } from "../lib/lancedb.ts";
 import * as logger from "../lib/logger.ts";
 import createApplesauceMCPServer from "../mcp/server.ts";
 import { runSetup } from "./setup.ts";
+import { rebuildDocs, rebuildExamples, rebuildMethods } from "./rebuild.ts";
 
 export interface MCPCommandOptions {
   mode?: "stdio" | "http";
   port?: number;
+  update?: boolean;
 }
 
 /**
@@ -38,6 +40,34 @@ export async function mcpCommand(
     }
     logger.warn("Running setup to clone repository and ingest data...");
     await runSetup();
+  } else if (options.update) {
+    // Run update sequence if --update flag is provided
+    logger.log("Updating applesauce repository...");
+    const result = await updateApplesauceRepo();
+    logger.log(result.message);
+
+    if (result.success && result.hasChanges) {
+      // Only rebuild if there were actual changes pulled
+      logger.log("Rebuilding databases with updated content...");
+      try {
+        await rebuildDocs();
+        await rebuildExamples();
+        await rebuildMethods();
+        logger.log("✓ Databases rebuilt successfully");
+      } catch (error) {
+        logger.error(
+          "⚠ Failed to rebuild databases:",
+          error instanceof Error ? error.message : error,
+        );
+        logger.warn(
+          "Continuing with old data. Run 'applesauce-mcp rebuild' to retry.",
+        );
+      }
+    } else if (result.success && !result.hasChanges) {
+      logger.log("No changes detected, skipping database rebuild");
+    } else {
+      logger.warn("Update failed. Continuing with existing data.");
+    }
   }
 
   // Create MCP server

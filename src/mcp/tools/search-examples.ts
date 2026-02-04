@@ -3,13 +3,6 @@ import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 import { EXAMPLES_TABLE_NAME } from "../../const.ts";
 import { getVectorStore } from "../../lib/lancedb.ts";
 
-/** Derive category from source path (e.g. "casting/threads.ts" -> "casting"). */
-function categoryFromSource(source: string | undefined): string {
-  if (!source || typeof source !== "string") return "unknown";
-  const parts = source.replace(/\\/g, "/").split("/");
-  return parts.length > 1 ? parts[0] : "unknown";
-}
-
 /** Derive example name from source (path without extension, e.g. "casting/threads"). */
 function nameFromSource(
   source: string | undefined,
@@ -66,10 +59,10 @@ export async function handleSearchExamples(
 
     const formattedResults = docs.map((doc) => {
       const source = doc.metadata?.source as string | undefined;
+
       return {
         name: nameFromSource(source, doc.pageContent),
-        description: doc.pageContent.slice(0, 200).trim(),
-        category: categoryFromSource(source),
+        description: doc.pageContent,
       };
     });
 

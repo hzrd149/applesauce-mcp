@@ -15,23 +15,11 @@ export interface ExampleRecord {
   extension: string; // File extension
 
   // Context metadata
-  category: string; // Example category (extracted from path)
   filePath: string; // Relative file path from examples root
   absolutePath: string; // Absolute file path
 
   // Search optimization
   keywords: string[]; // Extracted technical terms
-  dependencies: string[]; // NPM packages or imports used
-}
-
-/** Metadata extracted from a code file */
-export interface ExtractedMetadata {
-  name: string;
-  description: string;
-  extension: string;
-  category: string;
-  keywords: string[];
-  dependencies: string[];
 }
 
 /**

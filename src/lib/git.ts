@@ -8,6 +8,7 @@ import { APPLESAUCE_LOCAL_PATH, APPLESAUCE_REPO_URL } from "../const.ts";
 export interface GitResult {
   success: boolean;
   message: string;
+  hasChanges?: boolean; // Whether the operation resulted in changes
 }
 
 /**
@@ -89,32 +90,52 @@ export async function updateApplesauceRepo(): Promise<GitResult> {
   }
 
   try {
-    // Run git pull
+    // Run git pull and capture output to detect changes
     const command = new Deno.Command("git", {
       args: ["pull", "origin"],
       cwd: repoPath,
-      stdout: "inherit",
-      stderr: "inherit",
+      stdout: "piped",
+      stderr: "piped",
     });
 
-    const { code } = await command.output();
+    const { code, stdout, stderr } = await command.output();
 
     if (code !== 0) {
+      // Print stderr for debugging
+      const errorText = new TextDecoder().decode(stderr);
+      console.error(errorText);
       return {
         success: false,
         message: `Git pull failed with exit code ${code}`,
+        hasChanges: false,
       };
     }
 
+    // Check output to see if there were changes
+    const outputText = new TextDecoder().decode(stdout);
+    const errorText = new TextDecoder().decode(stderr);
+    const fullOutput = outputText + errorText;
+
+    // Print the output
+    console.log(fullOutput);
+
+    // "Already up to date" means no changes
+    const hasChanges = !fullOutput.includes("Already up to date") &&
+      !fullOutput.includes("Already up-to-date");
+
     return {
       success: true,
-      message: "Repository updated successfully",
+      message: hasChanges
+        ? "Repository updated with new changes"
+        : "Repository already up to date",
+      hasChanges,
     };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     return {
       success: false,
       message: `Git pull failed: ${message}`,
+      hasChanges: false,
     };
   }
 }

@@ -3,7 +3,7 @@ deno.lock
 .deno/
 
 # Data directory (LanceDB)
-data/
+/data
 
 # Config file (may contain sensitive paths)
 config.json

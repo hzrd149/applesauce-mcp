@@ -231,8 +231,8 @@ export OPENAI_BASE_URL=https://openrouter.ai/api/v1
 | `OPENAI_API_KEY`     | API key for OpenAI-compatible providers | (required for OpenAI)       |
 | `OPENAI_BASE_URL`    | Base URL for OpenAI-compatible APIs     | `https://api.openai.com/v1` |
 
-**Note:** When switching providers, you'll need to re-run `deno task cli rebuild`
-to regenerate embeddings with the new provider.
+**Note:** When switching providers, you'll need to re-run
+`deno task cli rebuild` to regenerate embeddings with the new provider.
 
 ## Running Locally
 

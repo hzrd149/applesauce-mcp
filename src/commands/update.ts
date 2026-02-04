@@ -27,6 +27,7 @@ async function update(options: {
   }
 
   let updateSuccessful = false;
+  let hasChanges = false;
 
   if (options.tag) {
     console.log(`Checking out tag: ${options.tag}`);
@@ -36,6 +37,8 @@ async function update(options: {
       console.log("Note: Continuing despite git error");
     } else {
       updateSuccessful = true;
+      // For tag checkout, always assume changes (we don't track this)
+      hasChanges = true;
     }
   } else {
     console.log("Updating to latest version...");
@@ -45,11 +48,12 @@ async function update(options: {
       console.log("Note: Continuing despite git error");
     } else {
       updateSuccessful = true;
+      hasChanges = result.hasChanges || false;
     }
   }
 
-  // Automatically rebuild databases after successful update
-  if (updateSuccessful && !options.skipRebuild) {
+  // Automatically rebuild databases after successful update with changes
+  if (updateSuccessful && hasChanges && !options.skipRebuild) {
     console.log(
       "\nRebuilding databases with updated content...\n",
     );
@@ -63,12 +67,18 @@ async function update(options: {
         "\n⚠ Failed to rebuild databases:",
         error instanceof Error ? error.message : error,
       );
-      console.log("You can manually rebuild later with: applesauce-mcp rebuild");
+      console.log(
+        "You can manually rebuild later with: applesauce-mcp rebuild",
+      );
       Deno.exit(1);
     }
-  } else if (updateSuccessful && options.skipRebuild) {
+  } else if (updateSuccessful && hasChanges && options.skipRebuild) {
     console.log(
       "\nSkipped database rebuild. Run 'applesauce-mcp rebuild' to update the databases.",
+    );
+  } else if (updateSuccessful && !hasChanges) {
+    console.log(
+      "\nNo changes detected, skipping database rebuild.",
     );
   }
 }
