@@ -16,15 +16,24 @@ await new Command().name("applesauce-mcp")
     "Start MCP in SSE mode",
     { default: "stdio" },
   ).option("--port <port:number>", "Port for HTTP server", { default: 3000 })
+  .option(
+    "--update",
+    "Update applesauce repository before starting server",
+  )
   .example(
     "Start MCP server in SSE mode on port 8080",
     "applesauce-mcp --mode http --port 8080",
   )
+  .example(
+    "Start MCP server with auto-update on startup",
+    "applesauce-mcp --update",
+  )
   .action(
-    async ({ mode, port }) => {
+    async ({ mode, port, update }) => {
       await mcpCommand({
         mode,
         port,
+        update,
       });
     },
   )
