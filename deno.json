@@ -26,6 +26,7 @@
     "@std/front-matter": "jsr:@std/front-matter@^1.0.9",
     "@std/fs": "jsr:@std/fs@^1.0.22",
     "@std/path": "jsr:@std/path@^1.1.4",
+    "@std/yaml": "jsr:@std/yaml@^1.0.11",
     "apache-arrow": "npm:apache-arrow@^17.0.0",
     "hono": "npm:hono@^4.11.7",
     "langchain": "npm:langchain@^1.2.14",

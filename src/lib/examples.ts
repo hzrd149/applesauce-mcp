@@ -8,7 +8,8 @@ import { walk } from "@std/fs/walk";
 import { relative } from "@std/path";
 import { EXAMPLES_ROOT } from "../const.ts";
 import { isApplesauceRepoValid } from "./git.ts";
-import { extractDescription, extractPathMetadata } from "./metadata.ts";
+import { extractPathMetadata } from "./metadata.ts";
+import { parseFrontmatter } from "./ts-frontmatter.ts";
 
 /** Minimal example info for listing (e.g. MCP resources) */
 export interface ExampleInfo {
@@ -55,8 +56,10 @@ export async function listExamples(): Promise<ExampleInfo[]> {
     let description: string | undefined;
     try {
       const content = await Deno.readTextFile(entry.path);
-      const extracted = extractDescription(content);
-      if (extracted) description = extracted;
+      const { frontmatter } = parseFrontmatter(content);
+      if (frontmatter?.description) {
+        description = frontmatter.description;
+      }
     } catch {
       // ignore read errors; description stays undefined
     }
@@ -97,7 +100,8 @@ export async function readExample(
 
   try {
     const code = await Deno.readTextFile(path);
-    const description = extractDescription(code) || undefined;
+    const { frontmatter } = parseFrontmatter(code);
+    const description = frontmatter?.description || undefined;
     return { code, description };
   } catch {
     return null;

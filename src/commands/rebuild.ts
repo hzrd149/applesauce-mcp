@@ -1,10 +1,9 @@
 import { Command } from "@cliffy/command";
 import { DirectoryLoader } from "@langchain/classic/document_loaders/fs/directory";
-import { Document } from "@langchain/core/documents";
 import { LanceDB } from "@langchain/community/vectorstores/lancedb";
+import { Document } from "@langchain/core/documents";
 import {
-  MarkdownTextSplitter,
-  RecursiveCharacterTextSplitter,
+  MarkdownTextSplitter
 } from "@langchain/textsplitters";
 import { join } from "@std/path";
 import {
@@ -14,11 +13,9 @@ import {
   DOCS_CHUNK_SIZE,
   DOCS_ROOT,
   DOCS_TABLE_NAME,
-  EXAMPLES_CHUNK_OVERLAP,
-  EXAMPLES_CHUNK_SIZE,
   EXAMPLES_ROOT,
   EXAMPLES_TABLE_NAME,
-  METHODS_TABLE_NAME,
+  METHODS_TABLE_NAME
 } from "../const.ts";
 import { isApplesauceRepoValid } from "../lib/git.ts";
 import { getDatabase, getEmbeddings } from "../lib/lancedb.ts";
@@ -28,6 +25,7 @@ import {
   parsePackageJson,
   parseTypeScriptFile,
 } from "../lib/ts-parser.ts";
+import { ExampleLoader } from "../loaders/example.ts";
 import { RelativeTextLoader } from "../loaders/text.ts";
 
 /**
@@ -38,7 +36,7 @@ async function deleteTableIfExists(tableName: string): Promise<void> {
   try {
     const db = await getDatabase();
     const tableNames = await db.tableNames();
-    
+
     if (tableNames.includes(tableName)) {
       await db.dropTable(tableName);
       console.log(`✓ Deleted existing table: ${tableName}`);
@@ -105,36 +103,31 @@ export async function rebuildExamples(): Promise<void> {
   await deleteTableIfExists(EXAMPLES_TABLE_NAME);
 
   console.log("Rebuilding examples...");
-  // Load all .ts/.tsx files from folder recursively
+  // Load all .ts/.tsx files from folder recursively using ExampleLoader
+  // This extracts front matter metadata instead of embedding the full code
   const loader = new DirectoryLoader(EXAMPLES_ROOT, {
     ".tsx": (filePath: string) =>
-      new RelativeTextLoader(filePath, EXAMPLES_ROOT),
+      new ExampleLoader(filePath, EXAMPLES_ROOT),
     ".ts": (filePath: string) =>
-      new RelativeTextLoader(filePath, EXAMPLES_ROOT),
+      new ExampleLoader(filePath, EXAMPLES_ROOT),
   }, true);
 
   const docs = await loader.load();
   console.log(`Loaded ${docs.length} example files`);
 
-  // Split into chunks for better retrieval
-  const splitter = RecursiveCharacterTextSplitter.fromLanguage(
-    "js",
-    {
-      chunkSize: EXAMPLES_CHUNK_SIZE, // ~200-300 words
-      chunkOverlap: EXAMPLES_CHUNK_OVERLAP, // Maintain context across chunks
-    },
-  );
+  // NO CHUNKING - Each example is a single document with only front matter embedded
+  // The front matter (title, description, tags) is much more relevant for search
+  // than the actual code, which would add noise to the embeddings
 
-  const splits = await splitter.splitDocuments(docs);
-  console.log(`Split into ${splits.length} chunks`);
-
-  // Add the documents to the table
-  console.log("Adding example chunks to table...");
+  // Add the documents to the table (one document per example file)
+  console.log("Adding examples to table...");
   const embeddings = await getEmbeddings();
-  await LanceDB.fromDocuments(splits, embeddings, {
+  await LanceDB.fromDocuments(docs, embeddings, {
     tableName: EXAMPLES_TABLE_NAME,
     uri: DB_PATH,
   });
+
+  console.log(`✓ Successfully indexed ${docs.length} examples`);
 }
 
 export async function rebuildMethods(): Promise<void> {

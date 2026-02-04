@@ -21,17 +21,6 @@ export interface ExampleRecord {
 
   // Search optimization
   keywords: string[]; // Extracted technical terms
-  dependencies: string[]; // NPM packages or imports used
-}
-
-/** Metadata extracted from a code file */
-export interface ExtractedMetadata {
-  name: string;
-  description: string;
-  extension: string;
-  category: string;
-  keywords: string[];
-  dependencies: string[];
 }
 
 /**
