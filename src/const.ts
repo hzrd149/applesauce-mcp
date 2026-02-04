@@ -19,7 +19,7 @@ export const DB_PATH = "./data";
 export const EMBEDDING_PROVIDER = Deno.env.get("EMBEDDING_PROVIDER") ||
   "ollama";
 export const EMBEDDING_MODEL = Deno.env.get("EMBEDDING_MODEL") ||
-  "qwen3-embedding:4b";
+  "nomic-embed-text:v1.5";
 
 /** Ollama-specific configuration */
 export const OLLAMA_HOST = Deno.env.get("OLLAMA_HOST") ||

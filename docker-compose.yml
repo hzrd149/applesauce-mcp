@@ -19,7 +19,7 @@ services:
     environment:
       # Embeddings provider configuration
       - EMBEDDING_PROVIDER=ollama # or "openai" for OpenAI-compatible providers
-      - EMBEDDING_MODEL=qwen3-embedding:4b
+      - EMBEDDING_MODEL=nomic-embed-text:v1.5
 
       # Ollama configuration (when EMBEDDING_PROVIDER=ollama)
       - OLLAMA_HOST=http://ollama:11434
