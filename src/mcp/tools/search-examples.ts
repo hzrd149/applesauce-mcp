@@ -62,7 +62,8 @@ export async function handleSearchExamples(
 
       return {
         name: nameFromSource(source, doc.pageContent),
-        description: doc.metadata?.description || doc.pageContent.slice(0, 200).trim(),
+        description: doc.metadata?.description ||
+          doc.pageContent.slice(0, 200).trim(),
       };
     });
 

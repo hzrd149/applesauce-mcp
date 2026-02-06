@@ -181,10 +181,10 @@ function extractMethodInfo(
   nameNode: ts.Identifier,
   kind: ExtractedMethod["kind"],
   sourceFile: string,
-  checker: ts.TypeChecker,
+  _checker: ts.TypeChecker,
 ): ExtractedMethod {
   const methodName = nameNode.text;
-  const signature = getSignature(node, checker);
+  const signature = getSignature(node);
   const jsDoc = getJSDocComment(node);
   const sourceFileObj = node.getSourceFile();
   const lineNumber =
@@ -226,18 +226,19 @@ function hasModifier(node: ts.Node, modifierKind: ts.SyntaxKind): boolean {
 /**
  * Get the function/method signature as a string
  */
-function getSignature(node: ts.Node, checker: ts.TypeChecker): string {
-  // For functions and methods
-  if (ts.isFunctionDeclaration(node) || ts.isMethodDeclaration(node)) {
-    const signature = checker.getSignatureFromDeclaration(node);
-    if (signature) {
-      return checker.signatureToString(signature);
-    }
-  }
-
-  // Fallback: get the text of the declaration
+function getSignature(node: ts.Node): string {
+  // get the text of the declaration
   const sourceFile = node.getSourceFile();
   let text = node.getText(sourceFile);
+
+  // Select the first line
+  text = text.split("\n")[0];
+
+  // Replace the export keyword with nothing
+  text = text.replace(/^exports\s?/, "");
+
+  // Replace the last { of methods
+  text = text.replace(/{$/, "");
 
   // Trim to first 500 characters for long signatures
   if (text.length > 500) {

@@ -197,6 +197,7 @@ export async function rebuildMethods(): Promise<void> {
           // Create document content with structured format
           const contentLines = [
             `${method.kind.toUpperCase()}: ${method.methodName}`,
+            `Signature: ${method.signature}`,
           ];
 
           // Add class info for methods
@@ -208,7 +209,7 @@ export async function rebuildMethods(): Promise<void> {
             contentLines.push(`Import: ${importPath}`);
           }
 
-          if (method.jsDoc) contentLines.push(method.jsDoc);
+          if (method.jsDoc) contentLines.push(`\n${method.jsDoc}`);
 
           const content = contentLines.join("\n");
 
@@ -217,6 +218,7 @@ export async function rebuildMethods(): Promise<void> {
             pageContent: content,
             metadata: {
               methodName: method.methodName,
+              signature: method.signature,
               kind: method.kind,
               packageName: packageInfo.name,
               packageVersion: packageInfo.version,
