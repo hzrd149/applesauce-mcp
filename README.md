@@ -18,7 +18,7 @@ produce working Nostr applications faster.
 ### For Using the Public HTTP Endpoint
 
 **No installation required!** Simply connect to
-`https://mcp.applesauce.build/mcp`
+`https://mcp.applesauce.hzrd149.com/mcp`
 
 ### For Running Locally (JSR/Deno or Cloned Repository)
 
@@ -46,7 +46,7 @@ Add to `~/.config/opencode/opencode.json`:
   "mcp": {
     "applesauce": {
       "type": "remote",
-      "url": "https://mcp.applesauce.build/mcp"
+      "url": "https://mcp.applesauce.hzrd149.com/mcp"
     }
   }
 }
@@ -80,7 +80,7 @@ Add to `.cursor/mcp.json` (project) or `~/.cursor/mcp.json` (global):
 {
   "mcpServers": {
     "applesauce": {
-      "url": "https://mcp.applesauce.build/mcp"
+      "url": "https://mcp.applesauce.hzrd149.com/mcp"
     }
   }
 }
@@ -112,7 +112,7 @@ configuration format:
 {
   "mcpServers": {
     "applesauce": {
-      "url": "https://mcp.applesauce.build/mcp"
+      "url": "https://mcp.applesauce.hzrd149.com/mcp"
     }
   }
 }
@@ -239,7 +239,7 @@ export OPENAI_BASE_URL=https://openrouter.ai/api/v1
 ## Running Locally
 
 Most users will use the public HTTP endpoint
-(`https://mcp.applesauce.build/mcp`) or run via JSR/Deno. However, if you want
+(`https://mcp.applesauce.hzrd149.com/mcp`) or run via JSR/Deno. However, if you want
 to run the server locally:
 
 ### Setup and Run
