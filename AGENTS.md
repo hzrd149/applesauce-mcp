@@ -8,7 +8,7 @@ codebase structure, development commands, and style guidelines.
 **Applesauce MCP** is a Deno-based Model Context Protocol (MCP) server that
 provides semantic search over code examples and documentation using LanceDB
 vector database and Ollama embeddings. The CLI tool automatically manages a
-local clone of the applesauce repository in `data/applesauce/`.
+local clone of the applesauce repository in an OS-specific cache directory.
 
 ### Project Structure
 
@@ -27,7 +27,8 @@ applesauce-mcp/              # Main Deno project
 │   │   ├── lancedb.ts       # LanceDB service (connection, embeddings, examples, docs, hybrid search)
 │   │   ├── metadata.ts      # Code metadata extraction
 │   │   ├── git.ts           # Git operations
-│   │   └── logger.ts        # Logging utilities
+│   │   ├── logger.ts        # Logging utilities
+│   │   └── cache.ts         # OS-specific cache directory utilities
 │   ├── loaders/             # Custom document loaders
 │   └── tools/               # MCP tools (search, read, list)
 └── deno.json                # Deno configuration
@@ -39,7 +40,7 @@ applesauce-mcp/              # Main Deno project
 
 ```bash
 # Setup and initialization
-deno task cli setup        # Clone applesauce repo to data/applesauce
+deno task cli setup        # Clone applesauce repo to OS-specific cache directory
 deno task cli update       # Pull latest changes and automatically rebuild databases
 deno task cli update --skip-rebuild  # Update without rebuilding
 deno task cli rebuild      # Manually rebuild documentation and examples databases from scratch
@@ -66,6 +67,25 @@ deno test                                        # Run all tests
 deno test src/lib/database.test.ts              # Run single test file
 deno test --allow-read --allow-write --allow-net # With permissions
 ```
+
+## Data Storage
+
+The MCP server stores data in OS-appropriate cache directories:
+
+- **Linux**: `~/.cache/applesauce-mcp/`
+- **macOS**: `~/Library/Caches/applesauce-mcp/`
+- **Windows**: `%LOCALAPPDATA%\applesauce-mcp\`
+
+Inside the cache directory:
+- `applesauce/` - Cloned Applesauce repository
+- `*.lance/` - LanceDB vector databases (docs, examples, methods)
+
+**Custom Paths**: Override using environment variables:
+- `APPLESAUCE_REPO_PATH` - Custom repository location
+- `APPLESAUCE_DB_PATH` - Custom database location
+
+These are particularly useful for Docker deployments where you may want to mount
+volumes at specific paths.
 
 ## Code Style Guidelines
 

@@ -17,6 +17,7 @@ import {
 } from "../const.ts";
 import { isApplesauceRepoValid } from "../lib/git.ts";
 import { getDatabase, getEmbeddings } from "../lib/lancedb.ts";
+import * as logger from "../lib/logger.ts";
 import {
   getAllTypeScriptFiles,
   mapSourceToExportPath,
@@ -37,12 +38,12 @@ async function deleteTableIfExists(tableName: string): Promise<void> {
 
     if (tableNames.includes(tableName)) {
       await db.dropTable(tableName);
-      console.log(`✓ Deleted existing table: ${tableName}`);
+      logger.log(`✓ Deleted existing table: ${tableName}`);
     } else {
-      console.log(`ℹ Table "${tableName}" does not exist, skipping deletion`);
+      logger.log(`ℹ Table "${tableName}" does not exist, skipping deletion`);
     }
   } catch (error) {
-    console.error(`⚠ Failed to delete table ${tableName}:`, error);
+    logger.error(`⚠ Failed to delete table ${tableName}:`, error);
     throw error;
   }
 }
@@ -50,24 +51,24 @@ async function deleteTableIfExists(tableName: string): Promise<void> {
 export async function rebuildDocs(): Promise<void> {
   // Verify repository exists
   if (!await isApplesauceRepoValid()) {
-    console.error(
+    logger.error(
       "Applesauce repository not found. Please run 'applesauce-mcp setup' first.",
     );
     Deno.exit(1);
   }
 
   // Delete existing docs table to prevent duplication
-  console.log("Deleting existing docs database...");
+  logger.log("Deleting existing docs database...");
   await deleteTableIfExists(DOCS_TABLE_NAME);
 
-  console.log("Reading docs...");
+  logger.log("Reading docs...");
   // Load all .md files from folder recursively
   const loader = new DirectoryLoader(DOCS_ROOT, {
     ".md": (filePath: string) => new RelativeTextLoader(filePath, DOCS_ROOT),
   }, true);
 
   const docs = await loader.load();
-  console.log(`Loaded ${docs.length} markdown files`);
+  logger.log(`Loaded ${docs.length} markdown files`);
 
   // Split into chunks for better retrieval
   const splitter = new MarkdownTextSplitter({
@@ -76,10 +77,10 @@ export async function rebuildDocs(): Promise<void> {
   });
 
   const splits = await splitter.splitDocuments(docs);
-  console.log(`Split into ${splits.length} chunks`);
+  logger.log(`Split into ${splits.length} chunks`);
 
   // Add the documents to the table
-  console.log("Adding doc chunks to table...");
+  logger.log("Adding doc chunks to table...");
   const embeddings = await getEmbeddings();
   await LanceDB.fromDocuments(splits, embeddings, {
     tableName: DOCS_TABLE_NAME,
@@ -90,17 +91,17 @@ export async function rebuildDocs(): Promise<void> {
 export async function rebuildExamples(): Promise<void> {
   // Verify repository exists
   if (!await isApplesauceRepoValid()) {
-    console.error(
+    logger.error(
       "Applesauce repository not found. Please run 'applesauce-mcp setup' first.",
     );
     Deno.exit(1);
   }
 
   // Delete existing examples table to prevent duplication
-  console.log("Deleting existing examples database...");
+  logger.log("Deleting existing examples database...");
   await deleteTableIfExists(EXAMPLES_TABLE_NAME);
 
-  console.log("Rebuilding examples...");
+  logger.log("Rebuilding examples...");
   // Load all .ts/.tsx files from folder recursively using ExampleLoader
   // This extracts front matter metadata instead of embedding the full code
   const loader = new DirectoryLoader(EXAMPLES_ROOT, {
@@ -109,37 +110,37 @@ export async function rebuildExamples(): Promise<void> {
   }, true);
 
   const docs = await loader.load();
-  console.log(`Loaded ${docs.length} example files`);
+  logger.log(`Loaded ${docs.length} example files`);
 
   // NO CHUNKING - Each example is a single document with only front matter embedded
   // The front matter (title, description, tags) is much more relevant for search
   // than the actual code, which would add noise to the embeddings
 
   // Add the documents to the table (one document per example file)
-  console.log("Adding examples to table...");
+  logger.log("Adding examples to table...");
   const embeddings = await getEmbeddings();
   await LanceDB.fromDocuments(docs, embeddings, {
     tableName: EXAMPLES_TABLE_NAME,
     uri: DB_PATH,
   });
 
-  console.log(`✓ Successfully indexed ${docs.length} examples`);
+  logger.log(`✓ Successfully indexed ${docs.length} examples`);
 }
 
 export async function rebuildMethods(): Promise<void> {
   // Verify repository exists
   if (!await isApplesauceRepoValid()) {
-    console.error(
+    logger.error(
       "Applesauce repository not found. Please run 'applesauce-mcp setup' first.",
     );
     Deno.exit(1);
   }
 
   // Delete existing methods table to prevent duplication
-  console.log("Deleting existing methods database...");
+  logger.log("Deleting existing methods database...");
   await deleteTableIfExists(METHODS_TABLE_NAME);
 
-  console.log("Discovering applesauce packages...");
+  logger.log("Discovering applesauce packages...");
   const packagesDir = join(APPLESAUCE_LOCAL_PATH, "packages");
   const packages: string[] = [];
 
@@ -156,12 +157,12 @@ export async function rebuildMethods(): Promise<void> {
     }
   }
 
-  console.log(`Found ${packages.length} packages\n`);
+  logger.log(`Found ${packages.length} packages\n`);
 
   const allDocuments: Document[] = [];
 
   for (const packageRoot of packages) {
-    console.log(`Processing: ${packageRoot.split("/").pop()}`);
+    logger.log(`Processing: ${packageRoot.split("/").pop()}`);
 
     // Parse package.json
     const packageInfo = await parsePackageJson(packageRoot);
@@ -173,7 +174,7 @@ export async function rebuildMethods(): Promise<void> {
     try {
       tsFiles = await getAllTypeScriptFiles(srcDir);
     } catch (error) {
-      console.error(`  ⚠ Failed to read source files: ${error}`);
+      logger.error(`  ⚠ Failed to read source files: ${error}`);
       continue;
     }
 
@@ -235,15 +236,15 @@ export async function rebuildMethods(): Promise<void> {
           methodCount++;
         }
       } catch (error) {
-        console.error(`  ⚠ Failed to parse ${filePath}: ${error}`);
+        logger.error(`  ⚠ Failed to parse ${filePath}: ${error}`);
       }
     }
 
-    console.log(`  Extracted ${methodCount} methods`);
+    logger.log(`  Extracted ${methodCount} methods`);
   }
 
-  console.log(`\nTotal methods extracted: ${allDocuments.length}`);
-  console.log("Adding methods to database...");
+  logger.log(`\nTotal methods extracted: ${allDocuments.length}`);
+  logger.log("Adding methods to database...");
 
   // Add the documents to the table using LangChain
   const embeddings = await getEmbeddings();
@@ -252,10 +253,14 @@ export async function rebuildMethods(): Promise<void> {
     uri: DB_PATH,
   });
 
-  console.log(`✓ Successfully rebuilt ${allDocuments.length} methods`);
+  logger.log(`✓ Successfully rebuilt ${allDocuments.length} methods`);
 }
 
 async function rebuildAll(): Promise<void> {
+  logger.log(`📁 Data storage locations:`);
+  logger.log(`   Repository: ${APPLESAUCE_LOCAL_PATH}`);
+  logger.log(`   Database: ${DB_PATH}\n`);
+  
   await rebuildDocs();
   await rebuildExamples();
   await rebuildMethods();

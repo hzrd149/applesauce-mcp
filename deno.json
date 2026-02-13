@@ -4,7 +4,7 @@
   "license": "MIT",
   "exports": "./mod.ts",
   "tasks": {
-    "dev": "npx @modelcontextprotocol/inspector deno task cli",
+    "dev": "npx -y @modelcontextprotocol/inspector@0.20 deno task cli",
     "dev-http": "deno run --env-file -P --watch src/cli.ts --mode http",
     "cli": "deno run --env-file -P src/cli.ts",
     "check": "deno check src/cli.ts"

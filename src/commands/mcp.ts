@@ -2,6 +2,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
+import { APPLESAUCE_LOCAL_PATH, DB_PATH } from "../const.ts";
 import { isApplesauceRepoValid, updateApplesauceRepo } from "../lib/git.ts";
 import { areAllTablesIngested } from "../lib/lancedb.ts";
 import * as logger from "../lib/logger.ts";
@@ -78,6 +79,8 @@ export async function mcpCommand(
     logger.log(`🚀 Starting MCP server on http://localhost:${port}`);
     logger.log(`   MCP endpoint: http://localhost:${port}/mcp`);
     logger.log(`   Health check: http://localhost:${port}/health`);
+    logger.log(`   Repository: ${APPLESAUCE_LOCAL_PATH}`);
+    logger.log(`   Database: ${DB_PATH}`);
 
     const transport = new WebStandardStreamableHTTPServerTransport();
     await server.connect(transport);

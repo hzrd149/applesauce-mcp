@@ -16,8 +16,12 @@ RUN deno install
 # Copy source code
 COPY . .
 
-# Create data directory for LanceDB
-RUN mkdir -p /app/data
+# Create data directory for volume mount
+RUN mkdir -p /data
+
+# Set default data paths to /data volume
+ENV APPLESAUCE_REPO_PATH=/data/applesauce
+ENV APPLESAUCE_DB_PATH=/data
 
 # Expose HTTP port
 EXPOSE 3000

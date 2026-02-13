@@ -4,6 +4,7 @@
 
 import { exists } from "@std/fs";
 import { APPLESAUCE_LOCAL_PATH, APPLESAUCE_REPO_URL } from "../const.ts";
+import * as logger from "./logger.ts";
 
 export interface GitResult {
   success: boolean;
@@ -47,7 +48,7 @@ export async function cloneApplesauceRepo(): Promise<void> {
   if (await exists(repoPath)) {
     // Check if it's a valid git repo
     if (await isApplesauceRepoValid()) {
-      console.log("Repository already exists, skipping clone");
+      logger.log("Repository already exists, skipping clone");
       return;
     } else {
       throw new Error(
@@ -57,7 +58,7 @@ export async function cloneApplesauceRepo(): Promise<void> {
   }
 
   // Clone the repository with shallow clone for faster initial setup
-  console.log(`Cloning ${APPLESAUCE_REPO_URL} to ${repoPath}...`);
+  logger.log(`Cloning ${APPLESAUCE_REPO_URL} to ${repoPath}...`);
 
   const command = new Deno.Command("git", {
     args: ["clone", "--depth", "1", APPLESAUCE_REPO_URL, repoPath],
@@ -71,7 +72,7 @@ export async function cloneApplesauceRepo(): Promise<void> {
     throw new Error(`Failed to clone repository (exit code: ${code})`);
   }
 
-  console.log("Repository cloned successfully");
+  logger.log("Repository cloned successfully");
 }
 
 /**
@@ -103,7 +104,7 @@ export async function updateApplesauceRepo(): Promise<GitResult> {
     if (code !== 0) {
       // Print stderr for debugging
       const errorText = new TextDecoder().decode(stderr);
-      console.error(errorText);
+      logger.error(errorText);
       return {
         success: false,
         message: `Git pull failed with exit code ${code}`,
@@ -117,7 +118,7 @@ export async function updateApplesauceRepo(): Promise<GitResult> {
     const fullOutput = outputText + errorText;
 
     // Print the output
-    console.log(fullOutput);
+    logger.log(fullOutput);
 
     // "Already up to date" means no changes
     const hasChanges = !fullOutput.includes("Already up to date") &&

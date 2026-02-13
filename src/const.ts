@@ -2,18 +2,31 @@
  * Centralized configuration constants for Applesauce MCP
  */
 
+import { getDefaultDbPath, getDefaultRepoPath } from "./lib/cache.ts";
+
 /** Repository management */
 export const APPLESAUCE_REPO_URL = "https://github.com/hzrd149/applesauce";
+
+/**
+ * Applesauce repository path
+ * - Uses APPLESAUCE_REPO_PATH env var if set
+ * - Otherwise uses OS-specific cache directory
+ */
 export const APPLESAUCE_LOCAL_PATH = Deno.env.get("APPLESAUCE_REPO_PATH") ||
-  "./data/applesauce";
+  getDefaultRepoPath();
+
+/**
+ * Database path for LanceDB vector databases
+ * - Uses APPLESAUCE_DB_PATH env var if set
+ * - Otherwise uses OS-specific cache directory
+ */
+export const DB_PATH = Deno.env.get("APPLESAUCE_DB_PATH") ||
+  getDefaultDbPath();
 
 /** Documentation and examples paths */
 export const DOCS_ROOT = `${APPLESAUCE_LOCAL_PATH}/apps/docs`;
 export const EXAMPLES_ROOT =
   `${APPLESAUCE_LOCAL_PATH}/apps/examples/src/examples`;
-
-/** Database configuration */
-export const DB_PATH = "./data";
 
 /** Embeddings provider configuration */
 export const EMBEDDING_PROVIDER = Deno.env.get("EMBEDDING_PROVIDER") ||

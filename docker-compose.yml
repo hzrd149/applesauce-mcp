@@ -28,9 +28,13 @@ services:
       # Uncomment and set these when using OpenAI, OpenRouter, etc.
       # - OPENAI_API_KEY=sk-your-api-key-here
       # - OPENAI_BASE_URL=https://api.openai.com/v1
+
+      # Data paths (defaults set in Dockerfile, can override here)
+      # - APPLESAUCE_REPO_PATH=/data/applesauce
+      # - APPLESAUCE_DB_PATH=/data
     volumes:
-      # Persist LanceDB data (applesauce repo is pre-cloned at /opt/applesauce)
-      - ./data:/app/data
+      # Persist applesauce repo and LanceDB databases
+      - mcp_data:/data
     ports:
       - "3000:3000"
     restart: unless-stopped
@@ -39,3 +43,5 @@ volumes:
   # Named volumes for persistence
   ollama_data:
     name: applesauce_ollama_data
+  mcp_data:
+    name: applesauce_mcp_data
