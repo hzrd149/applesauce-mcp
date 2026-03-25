@@ -5,6 +5,7 @@ import { cors } from "hono/cors";
 import { APPLESAUCE_LOCAL_PATH, DB_PATH } from "../const.ts";
 import { isApplesauceRepoValid, updateApplesauceRepo } from "../lib/git.ts";
 import { areAllTablesIngested } from "../lib/lancedb.ts";
+import { createMCPHttpRequestHandler } from "../lib/mcp-http.ts";
 import * as logger from "../lib/logger.ts";
 import createApplesauceMCPServer from "../mcp/server.ts";
 import { runSetup } from "./setup.ts";
@@ -71,9 +72,6 @@ export async function mcpCommand(
     }
   }
 
-  // Create MCP server
-  const server = createApplesauceMCPServer();
-
   // Start server with appropriate transport
   if (mode === "http") {
     logger.log(`🚀 Starting MCP server on http://localhost:${port}`);
@@ -82,8 +80,11 @@ export async function mcpCommand(
     logger.log(`   Repository: ${APPLESAUCE_LOCAL_PATH}`);
     logger.log(`   Database: ${DB_PATH}`);
 
-    const transport = new WebStandardStreamableHTTPServerTransport();
-    await server.connect(transport);
+    const handleMCPRequest = createMCPHttpRequestHandler({
+      createServer: createApplesauceMCPServer,
+      createTransport: (transportOptions) =>
+        new WebStandardStreamableHTTPServerTransport(transportOptions),
+    });
 
     // Create Hono app
     const app = new Hono();
@@ -105,7 +106,7 @@ export async function mcpCommand(
     );
 
     app.all("/mcp", async (c) => {
-      return await transport.handleRequest(c.req.raw);
+      return await handleMCPRequest(c.req.raw);
     });
 
     // Start HTTP server
@@ -118,6 +119,7 @@ export async function mcpCommand(
   } else {
     // Default: stdio transport
     logger.error("🚀 Starting MCP server with stdio transport");
+    const server = createApplesauceMCPServer();
     const transport = new StdioServerTransport();
     await server.connect(transport);
   }
