@@ -260,7 +260,7 @@ async function rebuildAll(): Promise<void> {
   logger.log(`📁 Data storage locations:`);
   logger.log(`   Repository: ${APPLESAUCE_LOCAL_PATH}`);
   logger.log(`   Database: ${DB_PATH}\n`);
-  
+
   await rebuildDocs();
   await rebuildExamples();
   await rebuildMethods();

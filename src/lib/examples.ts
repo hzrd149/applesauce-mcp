@@ -10,7 +10,7 @@ import { EXAMPLES_ROOT } from "../const.ts";
 import { isApplesauceRepoValid } from "./git.ts";
 import { parseMetadata } from "./jsdoc-metadata.ts";
 
-/** Minimal example info for listing (e.g. MCP resources) */
+/** Minimal example info for listing examples in MCP tools */
 export interface ExampleInfo {
   name: string;
   description?: string;

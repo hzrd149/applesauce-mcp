@@ -77,10 +77,12 @@ The MCP server stores data in OS-appropriate cache directories:
 - **Windows**: `%LOCALAPPDATA%\applesauce-mcp\`
 
 Inside the cache directory:
+
 - `applesauce/` - Cloned Applesauce repository
 - `*.lance/` - LanceDB vector databases (docs, examples, methods)
 
 **Custom Paths**: Override using environment variables:
+
 - `APPLESAUCE_REPO_PATH` - Custom repository location
 - `APPLESAUCE_DB_PATH` - Custom database location
 

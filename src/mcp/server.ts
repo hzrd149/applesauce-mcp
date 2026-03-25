@@ -2,12 +2,8 @@ import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import {
   CallToolRequestSchema,
   type CallToolResult,
-  ListResourcesRequestSchema,
   ListToolsRequestSchema,
-  ReadResourceRequestSchema,
-  type Resource,
 } from "@modelcontextprotocol/sdk/types.js";
-import { listExamples, readExample } from "../lib/examples.ts";
 import {
   handleListDocs,
   handleListExamples,
@@ -60,7 +56,6 @@ export default function createApplesauceMCPServer(): Server {
     {
       capabilities: {
         tools: {},
-        resources: {},
       },
     },
   );
@@ -93,50 +88,6 @@ export default function createApplesauceMCPServer(): Server {
           isError: true,
         };
       }
-    },
-  );
-
-  // Register resource handlers (examples from repo filesystem, not LanceDB)
-  server.setRequestHandler(ListResourcesRequestSchema, async () => {
-    const allExamples = await listExamples();
-
-    const resources: Resource[] = allExamples.map((example) => ({
-      uri: `applesauce://example/${example.name}`,
-      name: `example/${example.name}`,
-      description: example.description || `Example: ${example.name}`,
-      mimeType: "application/x-typescript",
-    }));
-
-    return { resources };
-  });
-
-  server.setRequestHandler(
-    ReadResourceRequestSchema,
-    async (request: { params: { uri: string } }) => {
-      const { uri } = request.params;
-
-      // Extract example name from URI (applesauce://example/casting/thread)
-      const prefix = "applesauce://example/";
-      if (!uri.startsWith(prefix)) {
-        throw new Error(`Invalid resource URI: ${uri}`);
-      }
-
-      const exampleName = uri.slice(prefix.length);
-      const example = await readExample(exampleName);
-
-      if (!example) {
-        throw new Error(`Example not found: ${exampleName}`);
-      }
-
-      return {
-        contents: [
-          {
-            uri,
-            mimeType: "application/x-typescript",
-            text: example.code,
-          },
-        ],
-      };
     },
   );
 

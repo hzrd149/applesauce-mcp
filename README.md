@@ -223,15 +223,15 @@ export OPENAI_BASE_URL=https://openrouter.ai/api/v1
 
 ### Environment Variables
 
-| Variable                | Description                             | Default                                       |
-| ----------------------- | --------------------------------------- | --------------------------------------------- |
-| `EMBEDDING_PROVIDER`    | Provider type (`ollama` or `openai`)    | `ollama`                                      |
-| `EMBEDDING_MODEL`       | Model name to use                       | `qwen3-embedding:4b`                          |
-| `OLLAMA_HOST`           | Ollama server URL (when using Ollama)   | `http://localhost:11434`                      |
-| `OPENAI_API_KEY`        | API key for OpenAI-compatible providers | (required for OpenAI)                         |
-| `OPENAI_BASE_URL`       | Base URL for OpenAI-compatible APIs     | `https://api.openai.com/v1`                   |
-| `APPLESAUCE_REPO_PATH`  | Custom path for applesauce repository   | OS-specific cache dir (see Data Storage)      |
-| `APPLESAUCE_DB_PATH`    | Custom path for vector databases        | OS-specific cache dir (see Data Storage)      |
+| Variable               | Description                             | Default                                  |
+| ---------------------- | --------------------------------------- | ---------------------------------------- |
+| `EMBEDDING_PROVIDER`   | Provider type (`ollama` or `openai`)    | `ollama`                                 |
+| `EMBEDDING_MODEL`      | Model name to use                       | `qwen3-embedding:4b`                     |
+| `OLLAMA_HOST`          | Ollama server URL (when using Ollama)   | `http://localhost:11434`                 |
+| `OPENAI_API_KEY`       | API key for OpenAI-compatible providers | (required for OpenAI)                    |
+| `OPENAI_BASE_URL`      | Base URL for OpenAI-compatible APIs     | `https://api.openai.com/v1`              |
+| `APPLESAUCE_REPO_PATH` | Custom path for applesauce repository   | OS-specific cache dir (see Data Storage) |
+| `APPLESAUCE_DB_PATH`   | Custom path for vector databases        | OS-specific cache dir (see Data Storage) |
 
 **Note:** When switching providers, you'll need to re-run
 `deno task cli rebuild` to regenerate embeddings with the new provider.
@@ -271,10 +271,12 @@ The MCP server stores data in OS-appropriate cache directories:
 - **Windows**: `%LOCALAPPDATA%\applesauce-mcp\`
 
 Inside the cache directory:
+
 - `applesauce/` - Cloned Applesauce repository
 - `*.lance/` - LanceDB vector databases (docs, examples, methods)
 
 **Custom Locations**: Override the default paths using environment variables:
+
 ```bash
 export APPLESAUCE_REPO_PATH=/path/to/applesauce  # Custom repo location
 export APPLESAUCE_DB_PATH=/path/to/databases     # Custom database location

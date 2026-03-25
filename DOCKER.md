@@ -29,7 +29,8 @@ docker compose down
 
 - **Image**: Built from `Dockerfile` (Deno + application code)
 - **Port**: 3000
-- **Volume**: `applesauce_mcp_data` mounted at `/data` (persists LanceDB and applesauce repo)
+- **Volume**: `applesauce_mcp_data` mounted at `/data` (persists LanceDB and
+  applesauce repo)
 - **Data Paths**:
   - Repository: `/data/applesauce`
   - Databases: `/data/*.lance`
@@ -178,13 +179,13 @@ docker compose up -d
 
 Available environment variables for the MCP container:
 
-| Variable                | Default               | Description                          |
-| ----------------------- | --------------------- | ------------------------------------ |
-| `OLLAMA_HOST`           | `http://ollama:11434` | Ollama API endpoint                  |
-| `EMBEDDING_PROVIDER`    | `ollama`              | Embeddings provider (ollama/openai)  |
-| `EMBEDDING_MODEL`       | `nomic-embed-text:v1.5` | Embedding model name               |
-| `APPLESAUCE_REPO_PATH`  | `/data/applesauce`    | Path to applesauce repository        |
-| `APPLESAUCE_DB_PATH`    | `/data`               | Path to LanceDB databases            |
+| Variable               | Default                 | Description                         |
+| ---------------------- | ----------------------- | ----------------------------------- |
+| `OLLAMA_HOST`          | `http://ollama:11434`   | Ollama API endpoint                 |
+| `EMBEDDING_PROVIDER`   | `ollama`                | Embeddings provider (ollama/openai) |
+| `EMBEDDING_MODEL`      | `nomic-embed-text:v1.5` | Embedding model name                |
+| `APPLESAUCE_REPO_PATH` | `/data/applesauce`      | Path to applesauce repository       |
+| `APPLESAUCE_DB_PATH`   | `/data`                 | Path to LanceDB databases           |
 
 To override, edit `docker-compose.yml`:
 
