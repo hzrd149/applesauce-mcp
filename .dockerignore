@@ -6,6 +6,11 @@ data/
 .git/
 .github/
 
+# Nix packaging — not needed at runtime
+flake.nix
+flake.lock
+nix/
+
 # Ignore OS files
 .DS_Store
 Thumbs.db

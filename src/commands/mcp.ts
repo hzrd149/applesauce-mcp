@@ -109,6 +109,8 @@ export async function mcpCommand(
       return await handleMCPRequest(c.req.raw);
     });
 
+    app.get("/health", (c) => c.json({ status: "ok" }));
+
     // Start HTTP server
     Deno.serve({
       port,

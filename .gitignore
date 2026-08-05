@@ -1,5 +1,4 @@
 # Deno
-deno.lock
 .deno/
 
 # Data directory (LanceDB)
@@ -26,3 +25,6 @@ contextgw.config.yml
 
 # Env
 .env
+
+# Nix build output
+result
