@@ -15,13 +15,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends git ca-certific
 
 WORKDIR /app
 
-# Copy dependency manifest and source for caching
-COPY deno.json ./
+# Copy dependency manifest, lockfile and source for caching
+COPY deno.json deno.lock ./
 COPY mod.ts ./
 COPY src/ ./src/
 
-# Warm the Deno module cache
-RUN deno cache src/cli.ts
+# Warm the Deno module cache from the lockfile so startup needs no downloads
+RUN deno install --frozen && deno cache --frozen src/cli.ts
 
 # Data volume — applesauce repo and LanceDB databases. Mounted at runtime.
 VOLUME ["/data"]
