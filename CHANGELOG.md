@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.5.4 - 2026-10-20
+
+- Fix the Docker image downloading npm dependencies on every start (and failing
+  without network access) by installing from `deno.lock` at build time.
+
 ## 0.5.3 - 2026-10-20
 
 - Update all dependencies (LanceDB 0.40, MCP SDK 1.32, TypeScript 6, Zod 4,
