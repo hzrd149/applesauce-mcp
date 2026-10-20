@@ -1,4 +1,4 @@
-import type { CallToolResult, Tool } from "@modelcontextprotocol/sdk/types.js";
+import type { CallToolResult, Tool } from "@modelcontextprotocol/sdk/types";
 import { getVectorStore } from "../../lib/lancedb.ts";
 import { DOCS_TABLE_NAME } from "../../const.ts";
 

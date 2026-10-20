@@ -1,4 +1,6 @@
+// @deno-types="@modelcontextprotocol/sdk/server/index"
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
+// @deno-types="@modelcontextprotocol/sdk/types"
 import {
   CallToolRequestSchema,
   type CallToolResult,

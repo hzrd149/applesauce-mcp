@@ -25,15 +25,16 @@ export function parseMetadata(source: string): {
   code: string;
 } {
   // Match the first JSDoc comment: /** ... */
-  const jsdocRegex = /^\/\*\*\s*\n([\s\S]*?)\*\//;
+  // Allow single-line imports before it (some examples import before the header)
+  const jsdocRegex = /^((?:import [^\n]*\n)*)\/\*\*\s*\n([\s\S]*?)\*\//;
   const match = source.match(jsdocRegex);
 
   if (!match) {
     return { metadata: null, code: source };
   }
 
-  const jsdocContent = match[1];
-  const code = source.replace(jsdocRegex, "").trimStart();
+  const jsdocContent = match[2];
+  const code = source.replace(jsdocRegex, "$1").trimStart();
 
   try {
     const metadata: ExampleMetadata = {};

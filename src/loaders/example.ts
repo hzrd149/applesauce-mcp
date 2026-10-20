@@ -7,6 +7,7 @@ import { BaseDocumentLoader } from "@langchain/core/document_loaders/base";
 import { Document } from "@langchain/core/documents";
 import path from "node:path";
 import { parseMetadata } from "../lib/jsdoc-metadata.ts";
+import * as logger from "../lib/logger.ts";
 
 /**
  * Loads TypeScript example files and extracts JSDoc metadata
@@ -35,8 +36,10 @@ export class ExampleLoader extends BaseDocumentLoader {
     const { metadata } = parseMetadata(content);
     const hasMetadata = metadata !== null;
 
+    // Skip examples without a description instead of aborting the whole rebuild
     if (!metadata?.description) {
-      throw new Error("No description found in JSDoc metadata");
+      logger.warn(`Skipping ${relativePath}: no description in JSDoc metadata`);
+      return [];
     }
 
     // Create document with metadata as the page content

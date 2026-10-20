@@ -1,5 +1,6 @@
+// @deno-types="@modelcontextprotocol/sdk/types"
 import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
-import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
+import type { Transport } from "@modelcontextprotocol/sdk/shared/transport";
 
 export interface MCPHttpTransport extends Transport {
   sessionId?: string;

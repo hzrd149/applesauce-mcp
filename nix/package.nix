@@ -11,7 +11,7 @@ let
     inherit version src;
 
     entrypoint = "src/cli.ts";
-    denoDepsHash = "sha256-fLuy5LriUuwSf6DHUsRORmPg8wG9cZZSktdBBX97G0Q=";
+    denoDepsHash = "sha256-pJEqgAY7erHRBsjUvPvybaTBiRkJv8STtF5vttU4YRI=";
     runtimeInputs = [ pkgs.git ];
     runFlags = [ "-P" ];
 

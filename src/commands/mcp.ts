@@ -1,4 +1,6 @@
+// @deno-types="@modelcontextprotocol/sdk/server/stdio"
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+// @deno-types="@modelcontextprotocol/sdk/server/webStandardStreamableHttp"
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
